@@ -1,0 +1,41 @@
+,Accuracy,Loss,F1 Score
+q1 freeze baseline,73.28,0.85,71.95
+q1 train baseline,71.58,0.87,69.53
+q2 freeze baseline,47.24,1.35,43.29
+q2 train baseline,52.74,1.15,50.16
+q1 freeze lstm glove,70.18,0.78,66.03
+q1 freeze lstm biglove,70.54,0.84,69.90
+q1 freeze lstm bigloveatt,76.01,0.70,75.04
+q1 freeze lstm bifasttextatt,71.57,0.74,69.61
+q1 freeze lstm bildaatt,69.20,0.90,64.67
+q1 freeze gru glove,71.53,1.05,70.05
+q1 freeze gru biglove,70.88,0.91,69.19
+q1 freeze gru bigloveatt,78.07,0.70,77.52
+q1 freeze gru bifasttextatt,72.59,0.72,69.24
+q1 freeze gru bildaatt,67.12,0.79,63.27
+q1 train lstm glove,70.88,0.95,68.54
+q1 train lstm biglove,70.86,1.00,68.81
+q1 train lstm bigloveatt,75.33,0.69,73.50
+q1 train lstm bifasttextatt,75.01,0.69,72.74
+q1 train lstm bildaatt,73.99,0.78,69.94
+q1 train gru glove,69.50,1.24,67.88
+q1 train gru biglove,71.21,1.08,70.89
+q1 train gru bigloveatt,75.33,0.81,72.16
+q1 train gru bifasttextatt,73.30,0.81,70.87
+q1 train gru bildaatt,73.29,0.71,69.23
+q2 freeze lstm glove,42.82,1.84,39.88
+q2 freeze lstm biglove,43.15,1.55,39.43
+q2 freeze lstm bigloveatt,52.05,1.53,49.99
+q2 freeze lstm bifasttextatt,54.10,1.16,50.59
+q2 freeze gru glove,41.44,1.66,37.25
+q2 freeze gru biglove,42.12,1.46,39.21
+q2 freeze gru bigloveatt,46.24,1.43,44.70
+q2 freeze gru bifasttextatt,49.64,1.27,46.53
+q2 train lstm glove,42.11,1.57,37.27
+q2 train lstm biglove,42.79,1.62,40.64
+q2 train lstm bigloveatt,44.86,1.38,42.06
+q2 train lstm bifasttextatt,46.87,1.89,45.00
+q2 train gru glove,39.73,1.78,34.52
+q2 train gru biglove,38.71,1.60,32.69
+q2 train gru bigloveatt,43.82,1.45,37.81
+q2 train gru bifasttextatt,42.10,1.40,36.34
