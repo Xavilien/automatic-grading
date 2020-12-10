@@ -1,5 +1,19 @@
 """"
 Preprocess the training data as well as the word embeddings/vectors and save them in the Arrays directory
+
+The following arrays will be generated (refer to generate_arrays for descriptin):
+    answers.npy: Student answers that have been preprocessed (cleaned and tokenized using the clean_tokenize function)
+    scores.npy: One-hot encoding of student scores
+    sequences.npy: answers but with each integer representing a particular word
+
+    word_idx.pickle: dictionary that returns the id of a given word
+    idx_word.pickle: dictionary that returns the word given an id
+
+    embedding_matrix_glove/fasttext/lda.npy: embedding matrix for a particular word embedding, used for input into the
+    embedding layer of neural network (lda is only for question 1)
+
+Should only be run once as the arrays will be saved. Note that the glove.6B.300d.txt and crawl-300d-2M-subword.vec
+will have to be downloaded from https://nlp.stanford.edu/projects/glove/ and https://fasttext.cc respectively
 """
 
 import pandas as pd
@@ -23,8 +37,7 @@ import plotly.graph_objs as go
 
 
 def get_training_data():
-    """Load the training data from CSV file and remove entries where there is no student
-    answer"""
+    """Load the training data from CSV file and remove entries where there is no student answer"""
     data = pd.read_excel("thermal_physics_quiz_dataset.xlsx", sheet_name=None)
     t = list(data.keys())
     training_data = pd.concat([data[t[1]],
@@ -114,8 +127,7 @@ def load_glove(word_idx, num_words):
 
 
 def load_fasttext(word_idx, num_words):
-    """Load FastText embeddings (300d)
-    Same as for GloVe, download the embeddings from https://fasttext.cc
+    """Load FastText embeddings (300d). Same as for GloVe, download the embeddings from https://fasttext.cc
     """
     fin = io.open("crawl-300d-2M-subword.vec", 'r', encoding='utf-8', newline='\n', errors='ignore')
     n, d = map(int, fin.readline().split())
@@ -179,16 +191,7 @@ def load_doc_embeddings(doc_embeddings, sequences):
 
 
 def generate_arrays(qn):
-    """Generates the following arrays for a particular question and saves them in the 'Arrays' directory:
-    answers: Student answers that have been preprocessed (cleaned and tokenized using the clean_tokenize function)
-    scores: One-hot encoding of student scores
-    sequences: answers but with each integer representing a particular word
-
-    word_idx: dictionary that returns the id of a given word
-    idx_word: dictionary that returns the word given an id
-
-    embedding_matrix_glove/fasttext/lda: embedding matrix for a particular word embedding, used for input into the
-    embedding layer of neural network
+    """Main function to generate the arrays. Refer to above for a list and description of the arrays generated
     """
     training_data = get_training_data()
     if qn == 1:
@@ -206,11 +209,14 @@ def generate_arrays(qn):
     print("Loading fastText")
     n, d, embedding_matrix_fasttext, word_lookup_fasttext = load_fasttext(word_idx, num_words)
 
-    print("Loading LDA")
-    doc_embeddings = json.load(open(f"q{qn}_doc_embeddings.json"))
-    word_embeddings = json.load(open(f"{qn}_word_embeddings.json"))
-    embedding_matrix_lda = load_lda(word_embeddings, word_idx)
-    doc_embedding_inputs = load_doc_embeddings(doc_embeddings, sequences)
+    if qn == 1:
+        print("Loading LDA")  # Only for Q1
+        doc_embeddings = json.load(open(f"q{qn}_doc_embeddings.json"))
+        word_embeddings = json.load(open(f"{qn}_word_embeddings.json"))
+        embedding_matrix_lda = load_lda(word_embeddings, word_idx)
+        doc_embedding_inputs = load_doc_embeddings(doc_embeddings, sequences)
+        np.save(f"Arrays{qn}/embedding_matrix_lda.npy", embedding_matrix_lda)
+        np.save(f"Arrays{qn}/doc_embedding_inputs.npy", doc_embedding_inputs)
 
     # Save arrays
     np.save(f"Arrays{qn}/sequences.npy", sequences)
@@ -218,13 +224,11 @@ def generate_arrays(qn):
     pickle.dump(word_idx, open(f"Arrays{qn}/word_idx.pickle", "wb"))
     pickle.dump(idx_word, open(f"Arrays{qn}/idx_word.pickle", "wb"))
 
-    np.save(f"Arrays{qn}/embedding_matrix.npy", embedding_matrix_glove)
+    np.save(f"Arrays{qn}/embedding_matrix_glove.npy", embedding_matrix_glove)
     np.save(f"Arrays{qn}/embedding_matrix_fasttext.npy", embedding_matrix_fasttext)
-    np.save(f"Arrays{qn}/embedding_matrix_lda.npy", embedding_matrix_lda)
-    np.save(f"Arrays{qn}/doc_embedding_inputs.npy", doc_embedding_inputs)
 
 
-def score_distribution():
+def score_distribution(save=False):
     """Plot the scores of responses across both datasets/questions"""
     answers, _ = load_arrays()
     scores1 = answers["q1_scores"]
@@ -268,10 +272,12 @@ def score_distribution():
         )
 
     py.iplot(fig, filename='basic histogram')
-    fig.write_image("combined_scores.pdf", format="pdf")
+
+    if save:
+        fig.write_image("combined_scores.pdf", format="pdf")
 
 
-def word_distribution():
+def word_distribution(save=False):
     """Plot the number of words for responses across both datasets/questions"""
     answers, _ = load_arrays()
     answers1 = answers["q1_answers"]
@@ -312,4 +318,20 @@ def word_distribution():
     )
 
     py.iplot(fig, filename='basic histogram')
-    # fig.write_image("combined_words.pdf", format="pdf")
+
+    if save:
+        fig.write_image("combined_words.pdf", format="pdf")
+
+
+if __name__ == '__main__':
+    print("Generating arrays for question 1...")
+    generate_arrays(1)
+
+    print("Generating arrays for question 2")
+    generate_arrays(2)
+
+    print("Generating score distribution...")
+    score_distribution()
+
+    print("Generating word distribution...")
+    word_distribution()
