@@ -9,29 +9,6 @@ import pandas as pd
 from tensorflow.keras.models import load_model
 
 
-# Turn one hot encoding/softmax output into actual score
-def score(predictions, actual):
-
-	output_prediction = []
-
-	# Find the highest score probability from softmax output
-	for example in predictions:
-		predicted_score = [0, None]
-		for index, value in enumerate(example):
-			if value > predicted_score[0]:
-				predicted_score = [value, index]
-		output_prediction.append(predicted_score[1])
-
-	actual_score = []
-
-	for row in actual:
-		for index, value in enumerate(row):
-			if value == 1:
-				actual_score.append(index)
-
-	return output_prediction, actual_score
-
-
 # Get predictions based on a specific trained model and the validation set
 def get_predictions(filename, i, x_valid, y_valid, att, rnn):
 	filename = filename + str(i) + '.h5'
