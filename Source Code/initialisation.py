@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import ParameterGrid
-from evaluate import score
 import os
 
 
@@ -20,11 +19,11 @@ def load_arrays():
 
     # GloVe, fastText and LDA embeddings
     embeddings = dict(
-        q1_glove=np.load("Arrays/embedding_matrix.npy"),
+        q1_glove=np.load("Arrays/embedding_matrix_glove.npy"),
         q1_fasttext=np.load("Arrays/embedding_matrix_fasttext.npy"),
         q1_lda=np.load("Arrays/embedding_matrix_lda.npy"),
 
-        q2_glove=np.load("Arrays2/embedding_matrix.npy"),
+        q2_glove=np.load("Arrays2/embedding_matrix_glove.npy"),
         q2_fasttext=np.load("Arrays2/embedding_matrix_fasttext.npy"),
         # q2_lda = np.load("Arrays2/embedding_matrix_lda.npy")
     )
@@ -52,7 +51,6 @@ def get_train_sequences(n, features, labels):
 
 
 def get_parametergrid():
-    # Hyperparameters
     hyperparameters = {
         "1_question": ["1", "2"],
         "2_train": ["freeze", "train"],
@@ -63,6 +61,28 @@ def get_parametergrid():
     }
 
     return ParameterGrid(hyperparameters)
+
+
+def score(predictions, actual):
+    """Turn one hot encoding/softmax output into actual score"""
+    output_prediction = []
+
+    # Find the highest score probability from softmax output
+    for example in predictions:
+        predicted_score = [0, None]
+        for index, value in enumerate(example):
+            if value > predicted_score[0]:
+                predicted_score = [value, index]
+        output_prediction.append(predicted_score[1])
+
+    actual_score = []
+
+    for row in actual:
+        for index, value in enumerate(row):
+            if value == 1:
+                actual_score.append(index)
+
+    return output_prediction, actual_score
 
 
 def get_nonbaseline_grid():
@@ -110,24 +130,25 @@ def get_baseline_grid():
 CURR = get_baseline_grid() + get_nonbaseline_grid()
 
 
-# Find out which model number a particular filename is based on the current model name
-def test(x):
+def test(model_name):
+    """Find out which model number a particular filename is based on the current model name"""
     saved = 0
     for i in CURR:
-        filename = "Models/q%s/%s/%s/%s%s%s/" % (
-            i["1_question"], i["2_train"], i["3_rnn"], i["4_bi"], i["6_emb"], i["5_att"])
+        qn, train, rnn, bi, emb, att = i["1_question"], i["2_train"], i["3_rnn"], i["4_bi"], i["6_emb"], i["5_att"]
+        filename = f"Models/q{qn}/{train}/{rnn}/{bi}{emb}{att}"
 
         for k in range(KFOLDS):
             f = filename + " " + str(k)
-            if f == x:
+            print(f)
+            if f == model_name:
                 return saved
             else:
                 saved += 1
 
 
-# Find out how many models have been trained -- total should be 200
-def num_models(x):
+def num_models(directory):
+    """Find out how many models have been trained -- total should be 200"""
     count = 0
-    for i in x:
+    for i in directory:
         count += len(os.listdir(i["filename"]))
     return count
