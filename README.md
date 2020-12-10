@@ -1,8 +1,9 @@
 # Automatic Grading of Online Formative Assessments using Bidirectional Neural Networks and Attention Mechanism
+### Description
 Source code for a project on the automatic grading of online formative assessments
 
 ### Overview of Source Code files
-_processing.py_: clean and process the training dataset as well as the word embeddings 
+_processing.py_: clean and process the training dataset as well as the word embeddings. Saves arrays so that they do not have to be regenerated each time.
 
 _initialisation.py_: generate the hyperparameters for all the models we want to train
 
