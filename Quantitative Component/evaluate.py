@@ -10,20 +10,20 @@ from tensorflow.keras.models import load_model
 
 # TODO: Clean up evaluate.py
 
-def get_predictions(filename, i, x_valid, y_valid, att, rnn):
+
+def get_predictions(filename, x_valid, y_valid, att, rnn):
 	"""Get predictions based on a specific trained model and the validation set"""
-	filename = filename + str(i) + '.h5'
 
 	if att == "att":
-		best_model = load_model(filename, custom_objects={"Attention": Attention})
+		model = load_model(filename, custom_objects={"Attention": Attention})
 	elif rnn == "baseline":
-		best_model = load_model(filename, custom_objects={"Sum": Sum})
+		model = load_model(filename, custom_objects={"Sum": Sum})
 	else:
-		best_model = load_model(filename)
+		model = load_model(filename)
 
-	predictions = best_model.predict(x_valid, verbose=0, batch_size=1, steps=None)
+	predictions = model.predict(x_valid, verbose=0, batch_size=1, steps=None)
 
-	output, actual = score(predictions, y_valid)
+	output, actual = score(predictions), score(y_valid)
 
 	results = {"Softmax": [predictions, y_valid], "Scores": [output, actual]}
 
@@ -44,7 +44,7 @@ def get_results(filename, att, rnn):
 		_, x_valid, _, y_valid = get_train_sequences(i, answers[sequences], answers[scores])
 
 		# Get the predictions that the model gives
-		results.append(get_predictions(filename, i, x_valid, y_valid, att, rnn))
+		results.append(get_predictions(f'{filename}{i}.h5', i, x_valid, y_valid, att, rnn))
 
 	# Save the predictions so that we don't have to recalculate again
 	pickle.dump(results, open(filename + "Results.pickle", "wb"))
@@ -95,4 +95,4 @@ if __name__ == '__main__':
 		columns=["Accuracy", "Loss", "F1 Score"],
 	)
 
-	r.to_csv("Results (Average 2).csv")
+	r.to_csv("Results/Results.csv")

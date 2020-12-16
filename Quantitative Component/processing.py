@@ -234,8 +234,8 @@ def score_distribution(save=False):
     scores1 = answers["q1_scores"]
     scores2 = answers["q2_scores"]
 
-    scores1, _ = score(scores1, scores1)
-    scores2, _ = score(scores2, scores2)
+    scores1 = score(scores1)
+    scores2 = score(scores2)
 
     layout = go.Layout(  # title=dict(text="Scores across Both Datasets", x=0.5, xanchor="center"),
         xaxis=dict(title="Score", nticks=5),

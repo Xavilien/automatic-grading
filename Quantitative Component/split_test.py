@@ -114,7 +114,7 @@ def get_results(filename, att, rnn):
         _, x_valid, _, y_valid = create_train_valid(answers[sequences], answers[scores], i)
 
         # Get the predictions that the model gives
-        results.append(get_predictions(filename, int(i * 10), x_valid, y_valid, att, rnn))
+        results.append(get_predictions(f'{filename}{int(i * 10)}.h5', x_valid, y_valid, att, rnn))
 
     # Save the predictions so that we don't have to recalculate again
     pickle.dump(results, open(filename + "Results.pickle", "wb"))
@@ -233,7 +233,7 @@ def check_scores():
     answers, _ = load_arrays()
 
     x_train, x_valid, y_train, y_valid = create_train_valid(answers["q1_sequences"], answers["q1_scores"], 0.1)
-    x, _ = score(y_valid, y_valid)
+    x = score(y_valid)
     for i in range(3):
         print(x.count(i))
 

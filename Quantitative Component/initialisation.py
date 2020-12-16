@@ -36,7 +36,7 @@ KFOLDS = 5
 
 def get_train_sequences(n, features, labels):
     """Get training and validation sequences based on kfolds cross validation"""
-    y, _ = score(labels, labels)
+    y = score(labels)
 
     kf = StratifiedKFold(KFOLDS, True, 1)
     split = list(kf.split(features, y))[n]
@@ -63,26 +63,9 @@ def get_parametergrid():
     return ParameterGrid(hyperparameters)
 
 
-def score(predictions, actual):
+def score(onehot):
     """Turn one hot encoding/softmax output into actual score"""
-    output_prediction = []
-
-    # Find the highest score probability from softmax output
-    for example in predictions:
-        predicted_score = [0, None]
-        for index, value in enumerate(example):
-            if value > predicted_score[0]:
-                predicted_score = [value, index]
-        output_prediction.append(predicted_score[1])
-
-    actual_score = []
-
-    for row in actual:
-        for index, value in enumerate(row):
-            if value == 1:
-                actual_score.append(index)
-
-    return output_prediction, actual_score
+    return [x.index(max(x)) for x in onehot]
 
 
 def get_nonbaseline_grid():
