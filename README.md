@@ -3,18 +3,23 @@
 Source code for a project on the automatic grading of online formative assessments
 
 ### Overview of Source Code files
-_processing.py_: clean and process the training dataset as well as the word embeddings. Saves arrays so that they do not have to be regenerated each time.
+**processing.py**: clean and process the training dataset as well as the word embeddings. Saves arrays so that they do not have to be regenerated each time.
 
-_initialisation.py_: generate the hyperparameters for all the models we want to train
+**initialisation.py**: generate the hyperparameters for all the models we want to train
 
-_models.py_: return a Keras model given the hyperparameters
+**models.py**: return a Keras model given the hyperparameters
 
-_train.py_: train all models
+**train.py**: train all models
 
-_evaluate.py_: generate the results from the trained models
+**evaluate.py**: generate the results from the trained models
 
-_split_test.py_: compare the performance of the best models against number of training samples 
+**split_test.py**: compare the performance of the best models against number of training samples 
 
-_attention.py_: plot attention weights for a particular model given a sample answer
+**attention.py**: plot attention weights for a particular model given a sample answer
 
-_kfolds.py_: honestly not too sure what I was doing with this file but I think it's just an extra file that I wanted to try something else with but did not end up using
+### How to run code for quantitative component
+1. Run processing.py to process the data (should be run only once)
+2. Run train.py to train all the different types of models (5 times each)
+3. Run evaluate.py to evaluate the models trained in 2.
+4. Run split_test.py to train the two best models
+5. Run attention.py to visualise the attention weights for a specific answer
