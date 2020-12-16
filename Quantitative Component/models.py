@@ -118,6 +118,7 @@ class Attention(Layer):
 
 
 class Sum(Layer):
+    """Custom layer that just does a simple sum of the vector input, not sure why keras doesnt have it"""
     def __init__(self):
         super(Sum, self).__init__()
 
@@ -132,22 +133,32 @@ class Sum(Layer):
 
 
 def get_layer(layer, rnn, bi, att):
-    if rnn == "baseline":
+    """Returns the main layer in the models. The following layers are trained in our paper:
+        1. Dense (baseline)
+        2. LSTM
+        3. GRU
+        4. BiLSTM
+        5. BiGRU
+        6. BiLSTM with attention
+        7. BiGRU with attention
+    """
+
+    if rnn == "baseline":  # Dense
         add_layer = Sum()(layer)
         return Dense(64, activation='relu')(add_layer)
-
-    if rnn == "lstm":
+    elif rnn == "lstm":
         rnn_layer = LSTM(64, dropout=0.1)
     else:
         rnn_layer = GRU(64, dropout=0.1)
 
-    if bi == "":
+    if bi == "":  # LSTM/GRU
         return rnn_layer(layer)
 
-    if att == "":
+    if att == "":  # BiLSTM/BiGRU
         rnn_layer = Bidirectional(rnn_layer)
         return rnn_layer(layer)
 
+    # BiLSTM/BiGRU with attention
     rnn_layer.return_sequences = True
     rnn_layer = Bidirectional(rnn_layer)(layer)
     attention_layer = Attention()(rnn_layer)
@@ -156,6 +167,15 @@ def get_layer(layer, rnn, bi, att):
 
 
 def get_model(train, rnn, bi, emb, att, q):
+    """Returns a neural network model based on hyperparameters
+        train: whether to train or freeze the embeddings
+        rnn: whether to use a dense, lstm or gru layer
+        bi: whether the lstm/gru layer is bidirectional
+        emb: type of embedding (GloVe, fastText or lda2vec)
+        att: whether the lstm/gru has attention mechanism
+        q: question number
+    """
+
     input_layer = Input(shape=(None,))
 
     embedding_layer = Embedding(
@@ -169,10 +189,13 @@ def get_model(train, rnn, bi, emb, att, q):
 
     dense_layer1 = Dense(64, activation='relu')(rnn_layer)
 
+    # Since q1 has 3 possible values for output and q2 has 4 possible values for output, we covneniently use
+    # the question number to give the shape for the output layer
     dense_layer2 = Dense(2 + int(q), activation='softmax')(dense_layer1)
 
     model = Model(inputs=input_layer, outputs=dense_layer2)
 
+    # We use Adam optimizer because it's one of the better ones
     opt = Adam(lr=0.001)
 
     # Compile the model
