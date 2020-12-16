@@ -41,48 +41,45 @@ def get_attention(model, i):
     return np.array(a[0])
 
 
-def plot_attention(weights, answer):
+def plot_attention(weights, answer, save=False):
     """Plots the attention weights for each word in an answer."""
-    y = answer
-    z = [i for i in weights[-len(answer):]]
+    z = weights[-len(answer):]
 
     data = {}
-
-    for i, x in enumerate(y):
-        if x in data.keys():
-            data[x] += z[i]
+    for i, word in enumerate(answer):
+        if word in data.keys():
+            data[word] += z[i]
         else:
-            data[x] = z[i]
+            data[word] = z[i]
 
     data = list(zip(data.keys(), [data[i] for i in data.keys()]))
     data = sorted(data, key=lambda s: s[1])
 
-    y = [i[0] for i in data]
-    z = [[i[1]] for i in data]
+    words = [i[0] for i in data]
+    weights = [[i[1]] for i in data]
 
-    # print(data)
-
-    plot1 = go.Heatmap(y=y, z=z, colorscale="Blues")
-
-    # annotations = ff.create_annotated_heatmap(z=cm, colorscale="Blues").layout.annotations
+    plot1 = go.Heatmap(y=words, z=weights, colorscale="Blues")
 
     layout = go.Layout(
-        # title=dict(text="Attention Weights of Answer Sample from Dataset 1", x=0.5, xanchor="center"),
+        title=dict(text="Attention Weights of Answer Sample from Dataset 1", x=0.5, xanchor="center"),
         xaxis=dict(title="Attention Weights", nticks=1, mirror=True, linecolor='black'),
-        yaxis=dict(title="Words", ticks="outside", nticks=len(y), mirror=True, linecolor='black'),
-        # annotations = annotations,
+        yaxis=dict(title="Words", ticks="outside", nticks=len(words), mirror=True, linecolor='black'),
         plot_bgcolor='black',
-        margin=go.layout.Margin(l=0, r=0, b=0, t=0, ))
+        margin=go.layout.Margin(l=0, r=0, b=0, t=0,))
 
     fig = go.Figure(data=plot1, layout=layout)
     fig.update_xaxes(showticklabels=False)
 
-    fig.write_image("attention.pdf", format="pdf")
     py.iplot(fig)
+
+    if save:
+        fig.write_image("attention.pdf", format="pdf")
 
 
 if __name__ == '__main__':
     print(True)
     bilstm = load_model("Models/Model1.h5",
                         custom_objects={"Attention": Attention})
-    plot_attention(get_attention(bilstm, 113), answers[113])
+
+    index = 10
+    plot_attention(get_attention(bilstm, index), answers[index])
