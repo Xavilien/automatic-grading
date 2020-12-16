@@ -8,9 +8,10 @@ from tensorflow.keras.losses import categorical_crossentropy
 import pandas as pd
 from tensorflow.keras.models import load_model
 
+# TODO: Clean up evaluate.py
 
-# Get predictions based on a specific trained model and the validation set
 def get_predictions(filename, i, x_valid, y_valid, att, rnn):
+	"""Get predictions based on a specific trained model and the validation set"""
 	filename = filename + str(i) + '.h5'
 
 	if att == "att":
@@ -49,10 +50,9 @@ def get_results(filename, att, rnn):
 	pickle.dump(results, open(filename + "Results.pickle", "wb"))
 
 
-# Generate the accuracy, loss and f1 results for a particular model
 def evaluate(p):
-	# Filename is where the trained models are saved
-	filename = p["filename"]
+	"""Generate the accuracy, loss and f1 results for a particular model"""
+	filename = p["filename"]  # where the trained models are saved
 
 	"""global count, saved, table
 	if count >= saved:

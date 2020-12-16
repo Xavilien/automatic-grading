@@ -12,6 +12,8 @@ from sklearn.metrics import accuracy_score, f1_score
 import plotly.offline as py
 import plotly.graph_objs as go
 
+# TODO: Clean up split_test.py
+
 split = [i / 10 for i in range(1, 10, 1)]
 
 bigru_glove_att = {
@@ -103,6 +105,8 @@ def get_results(filename, att, rnn):
     for i in split:
         print(filename, i)
         # notif(filename + str(i))
+
+        answers, embeddings = load_arrays()
 
         # Get the training and Validation Data
         sequences = filename[7:9] + "_sequences"
