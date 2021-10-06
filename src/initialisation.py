@@ -6,25 +6,27 @@ import os
 
 def load_arrays():
     """Return the pre-saved arrays"""
+    path = "Arrays"
+
     # Student answers with the corresponding scores
     answers = dict(
-        q1_answers=np.load("Arrays/answers.npy", allow_pickle=True),
-        q1_scores=np.load("Arrays/scores.npy"),
-        q1_sequences=np.load("Arrays/sequences.npy"),
+        q1_answers=np.load(f"{path}/answers.npy", allow_pickle=True),
+        q1_scores=np.load(f"{path}/scores.npy"),
+        q1_sequences=np.load(f"{path}/sequences.npy"),
 
-        q2_answers=np.load("Arrays2/answers.npy", allow_pickle=True),
-        q2_scores=np.load("Arrays2/scores.npy"),
-        q2_sequences=np.load("Arrays2/sequences.npy"),
+        q2_answers=np.load(f"{path}2/answers.npy", allow_pickle=True),
+        q2_scores=np.load(f"{path}2/scores.npy"),
+        q2_sequences=np.load(f"{path}2/sequences.npy"),
     )
 
     # GloVe, fastText and LDA embeddings
     embeddings = dict(
-        q1_glove=np.load("Arrays/embedding_matrix_glove.npy"),
-        q1_fasttext=np.load("Arrays/embedding_matrix_fasttext.npy"),
-        q1_lda=np.load("Arrays/embedding_matrix_lda.npy"),
+        q1_glove=np.load(f"{path}/embedding_matrix_glove.npy"),
+        q1_fasttext=np.load(f"{path}/embedding_matrix_fasttext.npy"),
+        q1_lda=np.load(f"{path}/embedding_matrix_lda.npy"),
 
-        q2_glove=np.load("Arrays2/embedding_matrix_glove.npy"),
-        q2_fasttext=np.load("Arrays2/embedding_matrix_fasttext.npy"),
+        q2_glove=np.load(f"{path}2/embedding_matrix_glove.npy"),
+        q2_fasttext=np.load(f"{path}2/embedding_matrix_fasttext.npy"),
         # q2_lda = np.load("Arrays2/embedding_matrix_lda.npy")
     )
 
@@ -38,7 +40,7 @@ def get_train_sequences(n, features, labels):
     """Get training and validation sequences based on kfolds cross validation"""
     y = score(labels)
 
-    kf = StratifiedKFold(KFOLDS, True, 1)
+    kf = StratifiedKFold(KFOLDS, shuffle=True, random_state=1)
     split = list(kf.split(features, y))[n]
 
     x_train = np.array(features[split[0]])
@@ -65,7 +67,7 @@ def get_parametergrid():
 
 def score(onehot):
     """Turn one hot encoding/softmax output into actual score"""
-    return [x.index(max(x)) for x in onehot]
+    return [list(x).index(max(x)) for x in onehot]
 
 
 def get_nonbaseline_grid():
