@@ -196,7 +196,7 @@ def get_model(train, rnn, bi, emb, att, q):
     model = Model(inputs=input_layer, outputs=dense_layer2)
 
     # We use Adam optimizer because it's one of the better ones
-    opt = Adam(lr=0.001)
+    opt = Adam(learning_rate=0.001)
 
     # Compile the model
     model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
