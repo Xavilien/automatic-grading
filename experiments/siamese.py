@@ -1,5 +1,7 @@
+import numpy as np
+
 from src.initialisation import *
-from src import models
+from process_marking_scheme import get_marking_scheme
 
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Embedding, Dense, Bidirectional, LSTM, Subtract
@@ -43,9 +45,15 @@ def get_model(embeddings):
 def main():
     answers, embeddings = load_arrays()
     x_train, x_valid, y_train, y_valid = get_train_sequences(1, answers['q1_sequences'], answers['q1_scores'])
+
+    marking_scheme = get_marking_scheme()
+    marking_scheme_train = np.array(list(marking_scheme) * len(x_train))
+    marking_scheme_valid = np.array(list(marking_scheme) * len(x_valid))
+
     model = get_model(embeddings['q1_glove'])
 
-    model.fit([x_train, x_train], y_train, epochs=10, batch_size=1)
+    model.fit([x_train, marking_scheme_train], y_train, epochs=10, batch_size=1,
+              validation_data=([x_valid, marking_scheme_valid], y_valid))
 
 
 if __name__ == '__main__':
