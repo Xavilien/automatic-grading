@@ -38,10 +38,8 @@ KFOLDS = 5
 
 def get_train_sequences(n, features, labels):
     """Get training and validation sequences based on kfolds cross validation"""
-    y = score(labels)
-
     kf = StratifiedKFold(KFOLDS, shuffle=True, random_state=1)
-    split = list(kf.split(features, y))[n]
+    split = list(kf.split(features, score(labels)))[n]
 
     x_train = np.array(features[split[0]])
     x_valid = np.array(features[split[1]])
