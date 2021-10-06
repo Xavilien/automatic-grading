@@ -1,5 +1,3 @@
-import numpy as np
-
 from src.initialisation import *
 from process_marking_scheme import get_marking_scheme
 
@@ -18,7 +16,7 @@ def get_model(embeddings):
         trainable=False,
         mask_zero=True)(input_layer)
 
-    rnn_layer = LSTM(64, dropout=0.1)(embedding_layer)
+    rnn_layer = Bidirectional(LSTM(64, dropout=0.1))(embedding_layer)
 
     dense_layer = Dense(64, activation='relu')(rnn_layer)
 
