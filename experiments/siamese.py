@@ -1,8 +1,9 @@
 from src.initialisation import *
 from process_marking_scheme import get_marking_scheme
+from src.models import Attention
 
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Embedding, Dense, Bidirectional, LSTM, Subtract
+from tensorflow.keras.layers import Input, Embedding, Dense, Bidirectional, LSTM, GRU, Subtract
 from tensorflow.keras.optimizers import Adam
 
 
@@ -16,9 +17,11 @@ def get_model(embeddings):
         trainable=False,
         mask_zero=True)(input_layer)
 
-    rnn_layer = Bidirectional(LSTM(64, dropout=0.1))(embedding_layer)
+    rnn_layer = Bidirectional(GRU(64, dropout=0.1))(embedding_layer)
 
-    dense_layer = Dense(64, activation='relu')(rnn_layer)
+    attention = Attention()(rnn_layer)
+
+    dense_layer = Dense(64, activation='relu')(attention)
 
     siamese = Model(inputs=input_layer, outputs=dense_layer)
 
