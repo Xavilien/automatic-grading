@@ -6,7 +6,7 @@ import os
 
 def load_arrays():
     """Return the pre-saved arrays"""
-    path = "Arrays"
+    path = "../src/Arrays"
 
     # Student answers with the corresponding scores
     answers = dict(
