@@ -1,6 +1,6 @@
 Conduction is the transfer of thermal energy through a medium without any flow of the medium
 Conduction occurs in solid, liquid and gases, or all states of matter
-Conduction occurs via the vibration of particles (for both metals and non-metals) and free electron diffusion (for metals only). Therefore, liquids and gases are poor conductors of heat compared to solids
+Conduction occurs via the vibration of particles and free electron diffusion. Therefore, liquids and gases are poor conductors of heat compared to solids
 Convection is the transfer of thermal energy by means of convection currents in a fluid (gas or liquid), due to difference in density
 Therefore, it only occurs in liquids and gases (fluids) because their particles are able to move freely.
 A convection current is the movement of fluid caused by a difference in the densities of various parts of the fluid.
