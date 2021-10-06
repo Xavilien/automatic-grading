@@ -17,7 +17,7 @@ def get_model(embeddings):
         trainable=False,
         mask_zero=True)(input_layer)
 
-    rnn_layer = Bidirectional(GRU(64, dropout=0.1))(embedding_layer)
+    rnn_layer = Bidirectional(GRU(64, dropout=0.1, return_sequences=True))(embedding_layer)
 
     attention = Attention()(rnn_layer)
 
