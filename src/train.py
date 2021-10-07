@@ -1,18 +1,18 @@
 from initialisation import *
-from models import get_model
+from saved_models import get_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 # TODO: Clean up train.py
 
 
 def train(p):
-    """Train all the models we want to compare"""
+    """Train all the saved_models we want to compare"""
     """global count, saved
     if count < saved - 5:
         count += 5
         return"""
 
-    # Filename is where the trained models are saved
+    # Filename is where the trained saved_models are saved
     filename = p["filename"]
 
     for i in range(KFOLDS):

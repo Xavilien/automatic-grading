@@ -1,5 +1,5 @@
 from initialisation import *
-from models import get_model
+from saved_models import get_model
 from evaluate import score, get_predictions
 
 from sklearn.model_selection import ParameterGrid
@@ -24,7 +24,7 @@ bigru_glove_att = {
     "att": ["att"],
     "emb": ["glove"],
     "split": split,
-    "filename": ["Models/q1/best/"],
+    "filename": ["saved_models/q1/best/"],
 }
 
 bilstm_fasttext_att = {
@@ -35,7 +35,7 @@ bilstm_fasttext_att = {
     "att": ["att"],
     "emb": ["fasttext"],
     "split": split,
-    "filename": ["Models/q2/best/"],
+    "filename": ["saved_models/q2/best/"],
 }
 
 q1 = list(ParameterGrid(bigru_glove_att))
@@ -117,7 +117,7 @@ def get_results(filename, att, rnn):
         results.append(get_predictions(f'{filename}{int(i * 10)}.h5', x_valid, y_valid, att, rnn))
 
     # Save the predictions so that we don't have to recalculate again
-    pickle.dump(results, open(filename + "Results.pickle", "wb"))
+    pickle.dump(results, open(filename + "results.pickle", "wb"))
 
 
 def metrics(result):
@@ -131,7 +131,7 @@ def metrics(result):
 
 
 def evaluate(filename):
-    results = pickle.load(open(filename + "Results.pickle", "rb"))
+    results = pickle.load(open(filename + "results.pickle", "rb"))
 
     for i in range(9):
         pass
@@ -151,7 +151,7 @@ def evaluate(filename):
 
 
 def evaluate2(filename):
-    results = pickle.load(open(filename + "Results.pickle", "rb"))
+    results = pickle.load(open(filename + "results.pickle", "rb"))
     results1 = pickle.load(open(filename + "Results1.pickle", "rb"))
 
     for i in range(9):
@@ -213,7 +213,7 @@ def plot_results2(filename1, filename2):
     acc2 = go.Scatter(name="Acccuracy (Dataset 2)", x=x, y=[x[0] for x in results2])
     f12 = go.Scatter(name="F1 (Dataset 2)", x=x, y=[x[1] for x in results2])
 
-    title = "Performance of Best Models against Number of Training Responses"
+    title = "Performance of Best saved_models against Number of Training Responses"
 
     layout = go.Layout(title=dict(text=title, xanchor="center", x=0.5),
                        xaxis=dict(title="Number of Training Responses", ticks="outside", mirror=True,
@@ -239,12 +239,12 @@ def check_scores():
 
 
 if __name__ == '__main__':
-    filename1 = "Models/q1/best/"
-    filename2 = "Models/q2/best/"
+    filename1 = "saved_models/q1/best/"
+    filename2 = "saved_models/q2/best/"
 
     saved = num_models([{"filename": filename1}]) + num_models([{"filename": filename2}]) - 1
 
-    """for i, m in enumerate(models):
+    """for i, m in enumerate(saved_models):
         if i < saved:
             continue
 

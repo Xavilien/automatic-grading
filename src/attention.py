@@ -1,14 +1,14 @@
 import tensorflow as tf
 import numpy as np
-from models import Attention
+from models.models import Attention
 import tensorflow.keras.backend as k
 from tensorflow.keras.models import Model, load_model
 import plotly.offline as py
 import plotly.graph_objects as go
 
-scores = np.load("Arrays/scores.npy")
-sequences = np.load("Arrays/sequences.npy")
-answers = np.load("Arrays/answers.npy", allow_pickle=True)
+scores = np.load("arrays/q1/scores.npy")
+sequences = np.load("arrays/q1/sequences.npy")
+answers = np.load("arrays/q1/answers.npy", allow_pickle=True)
 
 
 def get_attention(model, i):
@@ -77,8 +77,7 @@ def plot_attention(weights, answer, save=False):
 
 
 if __name__ == '__main__':
-    print(True)
-    bilstm = load_model("Models/Model1.h5",
+    bilstm = load_model("saved_models/attention_model.h5",
                         custom_objects={"Attention": Attention})
 
     index = 10

@@ -1,5 +1,5 @@
 from initialisation import *
-from models import Attention, Sum
+from saved_models import Attention, Sum
 
 import pickle
 
@@ -47,18 +47,18 @@ def get_results(filename, att, rnn):
 		results.append(get_predictions(f'{filename}{i}.h5', i, x_valid, y_valid, att, rnn))
 
 	# Save the predictions so that we don't have to recalculate again
-	pickle.dump(results, open(filename + "Results.pickle", "wb"))
+	pickle.dump(results, open(filename + "results.pickle", "wb"))
 
 
 def evaluate(p):
 	"""Generate the accuracy, loss and f1 results for a particular model"""
-	filename = p["filename"]  # where the trained models are saved
+	filename = p["filename"]  # where the trained saved_models are saved
 
 	"""global count, saved, table
 	if count >= saved:
 		get_results(filename, p["5_att"], p["3_rnn"])"""
 
-	results = pickle.load(open(filename + "Results.pickle", "rb"))
+	results = pickle.load(open(filename + "results.pickle", "rb"))
 
 	accuracy = []
 	loss = []
@@ -95,4 +95,4 @@ if __name__ == '__main__':
 		columns=["Accuracy", "Loss", "F1 Score"],
 	)
 
-	r.to_csv("Results/Results.csv")
+	r.to_csv("results/results.csv")

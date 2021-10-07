@@ -1,5 +1,5 @@
 """"
-Preprocess the training data as well as the word embeddings/vectors and save them in the Arrays directory
+Preprocess the training data as well as the word embeddings/vectors and save them in the q1 directory
 
 The following arrays will be generated (refer to generate_arrays for descriptin):
     answers.npy: Student answers that have been preprocessed (cleaned and tokenized using the clean_tokenize function)
@@ -215,17 +215,17 @@ def generate_arrays(qn):
         word_embeddings = json.load(open(f"{qn}_word_embeddings.json"))
         embedding_matrix_lda = load_lda(word_embeddings, word_idx)
         doc_embedding_inputs = load_doc_embeddings(doc_embeddings, sequences)
-        np.save(f"Arrays{qn}/embedding_matrix_lda.npy", embedding_matrix_lda)
-        np.save(f"Arrays{qn}/doc_embedding_inputs.npy", doc_embedding_inputs)
+        np.save(f"q1{qn}/embedding_matrix_lda.npy", embedding_matrix_lda)
+        np.save(f"q1{qn}/doc_embedding_inputs.npy", doc_embedding_inputs)
 
     # Save arrays
-    np.save(f"Arrays{qn}/sequences.npy", sequences)
-    np.save(f"Arrays{qn}/scores.npy", scores)
-    pickle.dump(word_idx, open(f"Arrays{qn}/word_idx.pickle", "wb"))
-    pickle.dump(idx_word, open(f"Arrays{qn}/idx_word.pickle", "wb"))
+    np.save(f"q1{qn}/sequences.npy", sequences)
+    np.save(f"q1{qn}/scores.npy", scores)
+    pickle.dump(word_idx, open(f"q1{qn}/word_idx.pickle", "wb"))
+    pickle.dump(idx_word, open(f"q1{qn}/idx_word.pickle", "wb"))
 
-    np.save(f"Arrays{qn}/embedding_matrix_glove.npy", embedding_matrix_glove)
-    np.save(f"Arrays{qn}/embedding_matrix_fasttext.npy", embedding_matrix_fasttext)
+    np.save(f"q1{qn}/embedding_matrix_glove.npy", embedding_matrix_glove)
+    np.save(f"q1{qn}/embedding_matrix_fasttext.npy", embedding_matrix_fasttext)
 
 
 def score_distribution(save=False):

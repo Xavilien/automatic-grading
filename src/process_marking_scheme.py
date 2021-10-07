@@ -6,10 +6,10 @@ import numpy as np
 
 def get_marking_scheme():
     try:
-        marking_scheme = np.load("marking_scheme.npy")
+        marking_scheme = np.load("arrays/q1/q1_marking_scheme.npy")
     except FileNotFoundError:
-        with open("q1_marking_scheme.txt", "r") as file1, \
-                open("../src/Arrays/word_idx.pickle", "rb") as file2:
+        with open("data/q1_marking_scheme.txt", "r") as file1, \
+                open("arrays/q1/word_idx.pickle", "rb") as file2:
             marking_scheme = [line for line in file1]
             marking_scheme = " ".join(marking_scheme)
             marking_scheme = processing.clean_tokenize(marking_scheme)
@@ -20,7 +20,7 @@ def get_marking_scheme():
 
             marking_scheme = pad_sequences([marking_scheme], maxlen=152)
 
-            np.save("marking_scheme.npy", marking_scheme)
+            np.save("arrays/q1/q1_marking_scheme.npy", marking_scheme)
 
     return marking_scheme
 

@@ -133,7 +133,7 @@ class Sum(Layer):
 
 
 def get_layer(layer, rnn, bi, att):
-    """Returns the main layer in the models. The following layers are trained in our paper:
+    """Returns the main layer in the saved_models. The following layers are trained in our paper:
         1. Dense (baseline)
         2. LSTM
         3. GRU

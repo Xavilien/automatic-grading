@@ -1,9 +1,9 @@
 from src.initialisation import *
 from process_marking_scheme import get_marking_scheme
-from src.models import Attention
+from models.models import Attention
 
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Embedding, Dense, Bidirectional, LSTM, GRU, Subtract
+from tensorflow.keras.layers import Input, Embedding, Dense, Bidirectional, GRU, Subtract
 from tensorflow.keras.optimizers import Adam
 
 

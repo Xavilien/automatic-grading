@@ -6,7 +6,7 @@ import os
 
 def load_arrays():
     """Return the pre-saved arrays"""
-    path = "../src/Arrays"
+    path = "arrays/q1"
 
     # Student answers with the corresponding scores
     answers = dict(
@@ -27,7 +27,7 @@ def load_arrays():
 
         q2_glove=np.load(f"{path}2/embedding_matrix_glove.npy"),
         q2_fasttext=np.load(f"{path}2/embedding_matrix_fasttext.npy"),
-        # q2_lda = np.load("Arrays2/embedding_matrix_lda.npy")
+        # q2_lda = np.load("q2/embedding_matrix_lda.npy")
     )
 
     return answers, embeddings
@@ -69,7 +69,7 @@ def score(onehot):
 
 
 def get_nonbaseline_grid():
-    """Gridsearch for all non-baseline models"""
+    """Gridsearch for all non-baseline saved_models"""
     grid = []
 
     for p in get_parametergrid():
@@ -77,11 +77,11 @@ def get_nonbaseline_grid():
         if p["6_emb"] == "lda":
             continue
 
-        # Don't train baseline models, that's a separate function
+        # Don't train baseline saved_models, that's a separate function
         if p["3_rnn"] == "baseline":
             continue
 
-        # Filter out models we don't intend to train
+        # Filter out saved_models we don't intend to train
         if p["5_att"] == "att" and p["4_bi"] != "bi":
             continue
         elif p["5_att"] == "att":
@@ -89,7 +89,7 @@ def get_nonbaseline_grid():
         elif p["5_att"] == "" and p["6_emb"] != "glove":
             continue
 
-        p["filename"] = "Models/q%s/%s/%s/%s%s%s/" % (p["1_question"], p["2_train"], p["3_rnn"],
+        p["filename"] = "saved_models/q%s/%s/%s/%s%s%s/" % (p["1_question"], p["2_train"], p["3_rnn"],
                                                       p["4_bi"], p["6_emb"], p["5_att"])
         grid.append(p)
 
@@ -97,14 +97,14 @@ def get_nonbaseline_grid():
 
 
 def get_baseline_grid():
-    """Gridsearch for baseline models"""
+    """Gridsearch for baseline saved_models"""
     grid = []
 
     for p in get_parametergrid():
         if p["3_rnn"] != "baseline" or p["4_bi"] == "bi" or p["5_att"] == "att" or p["6_emb"] != "glove":
             continue
 
-        p["filename"] = "Models/q%s/%s/%s/" % (p["1_question"], p["2_train"], p["3_rnn"])
+        p["filename"] = "saved_models/q%s/%s/%s/" % (p["1_question"], p["2_train"], p["3_rnn"])
         grid.append(p)
 
     return grid
@@ -118,7 +118,7 @@ def test(model_name):
     saved = 0
     for i in CURR:
         qn, train, rnn, bi, emb, att = i["1_question"], i["2_train"], i["3_rnn"], i["4_bi"], i["6_emb"], i["5_att"]
-        filename = f"Models/q{qn}/{train}/{rnn}/{bi}{emb}{att}"
+        filename = f"saved_models/q{qn}/{train}/{rnn}/{bi}{emb}{att}"
 
         for k in range(KFOLDS):
             f = filename + " " + str(k)
@@ -130,7 +130,7 @@ def test(model_name):
 
 
 def num_models(directory):
-    """Find out how many models have been trained -- total should be 200"""
+    """Find out how many saved_models have been trained -- total should be 200"""
     count = 0
     for i in directory:
         count += len(os.listdir(i["filename"]))
