@@ -1,21 +1,3 @@
-""""
-Preprocess the training data as well as the word embeddings/vectors and save them in the q1 directory
-
-The following arrays will be generated (refer to generate_arrays for descriptin):
-    answers.npy: Student answers that have been preprocessed (cleaned and tokenized using the clean_tokenize function)
-    scores.npy: One-hot encoding of student scores
-    sequences.npy: answers but with each integer representing a particular word
-
-    word_idx.pickle: dictionary that returns the id of a given word
-    idx_word.pickle: dictionary that returns the word given an id
-
-    embedding_matrix_glove/fasttext/lda.npy: embedding matrix for a particular word embedding, used for input into the
-    embedding layer of neural network (lda is only for question 1)
-
-Should only be run once as the arrays will be saved. Note that the glove.6B.300d.txt and crawl-300d-2M-subword.vec
-will have to be downloaded from https://nlp.stanford.edu/projects/glove/ and https://fasttext.cc respectively
-"""
-
 import pandas as pd
 import numpy as np
 import io
@@ -30,15 +12,14 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 import pickle
 
-from initialisation import load_arrays
-from evaluate import score
+from initialisation import load_arrays, score
 import plotly.offline as py
 import plotly.graph_objs as go
 
 
 def get_training_data():
     """Load the training data from CSV file and remove entries where there is no student answer"""
-    data = pd.read_excel("thermal_physics_quiz_dataset.xlsx", sheet_name=None)
+    data = pd.read_excel("data/thermal_physics_quiz_dataset.xlsx", sheet_name=None)
     t = list(data.keys())
     training_data = pd.concat([data[t[1]],
                                data[t[2]].drop(['Unnamed: 4'], axis=1),
@@ -98,7 +79,7 @@ def load_glove(word_idx, num_words):
     https://nlp.stanford.edu/projects/glove/
     """
 
-    glove_vectors = 'glove.6B.300d.txt'
+    glove_vectors = 'data/glove.6B.300d.txt'
     glove = np.loadtxt(glove_vectors, dtype='str', comments=None)
 
     word_lookup = {}
@@ -129,7 +110,7 @@ def load_glove(word_idx, num_words):
 def load_fasttext(word_idx, num_words):
     """Load FastText embeddings (300d). Same as for GloVe, download the embeddings from https://fasttext.cc
     """
-    fin = io.open("crawl-300d-2M-subword.vec", 'r', encoding='utf-8', newline='\n', errors='ignore')
+    fin = io.open("data/crawl-300d-2M-subword.vec", 'r', encoding='utf-8', newline='\n', errors='ignore')
     n, d = map(int, fin.readline().split())
     word_lookup = {}
 
