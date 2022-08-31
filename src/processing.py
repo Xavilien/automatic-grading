@@ -2,24 +2,26 @@ import pandas as pd
 import numpy as np
 import io
 import json
-
+import pickle
 import nltk
 import string
-from tensorflow.keras.utils import to_categorical
+from pathlib import Path
 
+from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-import pickle
 
 from initialisation import load_arrays, score
 import plotly.offline as py
 import plotly.graph_objs as go
 
+FILEPATH = Path(__file__).parent.absolute()
+
 
 def get_training_data():
     """Load the training data from CSV file and remove entries where there is no student answer"""
-    data = pd.read_excel("data/thermal_physics_quiz_dataset.xlsx", sheet_name=None)
+    data = pd.read_excel(FILEPATH/"data"/"thermal_physics_quiz_dataset.xlsx", sheet_name=None)
     t = list(data.keys())
     training_data = pd.concat([data[t[1]],
                                data[t[2]].drop(['Unnamed: 4'], axis=1),
@@ -33,16 +35,21 @@ def get_training_data():
 
 def clean_tokenize(corpus):
     """Split essay into tokens, removing punctuations and non-alphabetical tokens and also removing stop words"""
+    # Tokenize the answers
     corpus = nltk.word_tokenize(corpus)
+
+    # Make all the words lowercase
     corpus = [w.lower() for w in corpus]
 
+    # Remove punctuation
     punctuation = "".join([i for i in string.punctuation if i != "/"])
-
     punc_table = str.maketrans('/', ' ', punctuation)
     corpus = [w.translate(punc_table) for w in corpus]
 
+    # Remove non-alphabetical tokens
     corpus = [w for w in corpus if w.isalpha()]
 
+    # Remove stopwords
     stop_words = set(nltk.corpus.stopwords.words('english'))
     corpus = [w for w in corpus if w not in stop_words]
 
@@ -79,8 +86,7 @@ def load_glove(word_idx, num_words):
     https://nlp.stanford.edu/projects/glove/
     """
 
-    glove_vectors = 'data/glove.6B.300d.txt'
-    glove = np.loadtxt(glove_vectors, dtype='str', comments=None)
+    glove = np.loadtxt(FILEPATH/"data"/"glove.6B.300d.txt", dtype='str', comments=None)
 
     word_lookup = {}
     count = 0
@@ -108,9 +114,10 @@ def load_glove(word_idx, num_words):
 
 
 def load_fasttext(word_idx, num_words):
-    """Load FastText embeddings (300d). Same as for GloVe, download the embeddings from https://fasttext.cc
+    """Load FastText embeddings (300d).
+    Same as for GloVe, download the embeddings from https://fasttext.cc
     """
-    fin = io.open("data/crawl-300d-2M-subword.vec", 'r', encoding='utf-8', newline='\n', errors='ignore')
+    fin = io.open(FILEPATH/"data"/"crawl-300d-2M-subword.vec", 'r', encoding='utf-8', newline='\n', errors='ignore')
     n, d = map(int, fin.readline().split())
     word_lookup = {}
 
@@ -184,29 +191,31 @@ def generate_arrays(qn):
 
     word_idx, idx_word, num_words, word_counts, sequences = make_sequences(answers)
 
-    print("Loading GloVe")
+    print("Loading GloVe...")
     embedding_matrix_glove, word_lookup_glove = load_glove(word_idx, num_words)
 
-    print("Loading fastText")
+    print("Loading fastText...")
     n, d, embedding_matrix_fasttext, word_lookup_fasttext = load_fasttext(word_idx, num_words)
 
+    path = FILEPATH/"arrays/q"
+
     if qn == 1:
-        print("Loading LDA")  # Only for Q1
-        doc_embeddings = json.load(open(f"q{qn}_doc_embeddings.json"))
-        word_embeddings = json.load(open(f"{qn}_word_embeddings.json"))
+        print("Loading LDA...")  # Only for Q1
+        doc_embeddings = json.load(open(f"{path}1/Lda2Vec/q1_embeddings/q1_doc_embeddings.json"))
+        word_embeddings = json.load(open(f"{path}1/Lda2Vec/q1_embeddings/q1_word_embeddings.json"))
         embedding_matrix_lda = load_lda(word_embeddings, word_idx)
         doc_embedding_inputs = load_doc_embeddings(doc_embeddings, sequences)
-        np.save(f"q1{qn}/embedding_matrix_lda.npy", embedding_matrix_lda)
-        np.save(f"q1{qn}/doc_embedding_inputs.npy", doc_embedding_inputs)
+        np.save(f"{path}{qn}/embedding_matrix_lda.npy", embedding_matrix_lda)
+        np.save(f"{path}{qn}/doc_embedding_inputs.npy", doc_embedding_inputs)
 
     # Save arrays
-    np.save(f"q1{qn}/sequences.npy", sequences)
-    np.save(f"q1{qn}/scores.npy", scores)
-    pickle.dump(word_idx, open(f"q1{qn}/word_idx.pickle", "wb"))
-    pickle.dump(idx_word, open(f"q1{qn}/idx_word.pickle", "wb"))
+    np.save(f"{path}{qn}/sequences.npy", sequences)
+    np.save(f"{path}{qn}/scores.npy", scores)
+    pickle.dump(word_idx, open(f"{path}{qn}/word_idx.pickle", "wb"))
+    pickle.dump(idx_word, open(f"{path}{qn}/idx_word.pickle", "wb"))
 
-    np.save(f"q1{qn}/embedding_matrix_glove.npy", embedding_matrix_glove)
-    np.save(f"q1{qn}/embedding_matrix_fasttext.npy", embedding_matrix_fasttext)
+    np.save(f"{path}{qn}/embedding_matrix_glove.npy", embedding_matrix_glove)
+    np.save(f"{path}{qn}/embedding_matrix_fasttext.npy", embedding_matrix_fasttext)
 
 
 def score_distribution(save=False):
