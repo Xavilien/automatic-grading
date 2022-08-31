@@ -16,7 +16,7 @@ To run `processing.py`, you will also have to download some data from [NLTK](htt
 >>> nltk.download('stopwords')
 ```
 
-You will also have to download the [GloVe](https://nlp.stanford.edu/projects/glove/) and [fastText](https://fasttext.cc/docs/en/english-vectors.html) word embeddings and place them in `src/data`. The GloVe embeddings we use is the `glove.6B.300d.txt` file then is in `glove.6B.zip`, while the fastText embeddings we use is `crawl-300d-2M-subword.vec`.
+You will also have to download the [GloVe](https://nlp.stanford.edu/projects/glove/) and [fastText](https://fasttext.cc/docs/en/english-vectors.html) word embeddings and place them in `src/data`. The GloVe embeddings we use is the `glove.6B.300d.txt` file in `glove.6B.zip`, while the fastText embeddings we use is `crawl-300d-2M-subword.vec`.
 
 ## Usage
 1. Run processing.py to process the data (should be run only once)
@@ -25,19 +25,18 @@ You will also have to download the [GloVe](https://nlp.stanford.edu/projects/glo
 4. Run split_test.py to train the two best models
 5. Run attention.py to visualise the attention weights for a specific answer
 
-### Pre-processing the Data
-Run `python processing.py` to clean and process the training dataset as well as the word embeddings. It only has to be run once as it saves arrays so that they do not have to be regenerated each time.
+### Pre-Processing the Data
+Run `processing.py` to clean and process the training dataset as well as the word embeddings. It only has to be run once as it saves arrays so that they do not have to be regenerated each time.
 
-Preprocess the training data as well as the word embeddings/vectors and save them in `src/arrays`.
+The following arrays will be generated in `src/arrays`:
 
-The following arrays will be generated (refer to generate_arrays for description):
-
-- answers.npy: Student answers that have been preprocessed (cleaned and tokenized using the clean_tokenize function)
-- scores.npy: One-hot encoding of student scores 
+- `sequences.npy`: 
+- `answers.npy`: Student answers that have been preprocessed (cleaned and tokenized using the clean_tokenize function)
+- `scores.npy`: One-hot encoding of student scores 
 - sequences.npy: answers but with each integer representing a particular word 
-- word_idx.pickle: dictionary that returns the id of a given word 
-- idx_word.pickle: dictionary that returns the word given an id 
-- embedding_matrix_glove/fasttext/lda.npy: embedding matrix for a particular word embedding, used for input into the embedding layer of neural network (lda is only for question 1)
+- `word_idx.pickle`: dictionary that returns the id of a given word 
+- `idx_word.pickle`: dictionary that returns the word given an id 
+- `embedding_matrix_glove/fasttext/lda.npy`: embedding matrix for a particular word embedding, used for input into the embedding layer of neural network (lda has been generated only for question 1)
 
 **Note**: refer to [here](#setup) for the additional data you will have to download if you would like to re-run `processing.py`. Otherwise, the arrays have already been generated in `src/arrays`.
 
@@ -70,5 +69,5 @@ Secondly, we would not have used early stopping and model checkpoints in our cod
 
 Thirdly, to address the choice of models, we understand that the current state-of-the-art models are mostly transformers instead of LSTMs. It would be interesting to train a transformer (or fine-tune an existing one) on this dataset to compare the performance.
 
-Some other minor code improvements:
+### Some other minor code improvements:
 - 

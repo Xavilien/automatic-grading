@@ -2,17 +2,20 @@ import numpy as np
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import ParameterGrid
 import os
+from pathlib import Path
+
+FILEPATH = Path(__file__).parent.absolute()
 
 
 def load_arrays():
     """Return the pre-saved arrays"""
-    path = "arrays/q1"
+    path = FILEPATH / "arrays/q"
 
     # Student answers with the corresponding scores
     answers = dict(
-        q1_answers=np.load(f"{path}/answers.npy", allow_pickle=True),
-        q1_scores=np.load(f"{path}/scores.npy"),
-        q1_sequences=np.load(f"{path}/sequences.npy"),
+        q1_answers=np.load(f"{path}1/answers.npy", allow_pickle=True),
+        q1_scores=np.load(f"{path}1/scores.npy"),
+        q1_sequences=np.load(f"{path}1/sequences.npy"),
 
         q2_answers=np.load(f"{path}2/answers.npy", allow_pickle=True),
         q2_scores=np.load(f"{path}2/scores.npy"),
@@ -21,9 +24,9 @@ def load_arrays():
 
     # GloVe, fastText and LDA embeddings
     embeddings = dict(
-        q1_glove=np.load(f"{path}/embedding_matrix_glove.npy"),
-        q1_fasttext=np.load(f"{path}/embedding_matrix_fasttext.npy"),
-        q1_lda=np.load(f"{path}/embedding_matrix_lda.npy"),
+        q1_glove=np.load(f"{path}1/embedding_matrix_glove.npy"),
+        q1_fasttext=np.load(f"{path}1/embedding_matrix_fasttext.npy"),
+        q1_lda=np.load(f"{path}1/embedding_matrix_lda.npy"),
 
         q2_glove=np.load(f"{path}2/embedding_matrix_glove.npy"),
         q2_fasttext=np.load(f"{path}2/embedding_matrix_fasttext.npy"),
@@ -89,8 +92,8 @@ def get_nonbaseline_grid():
         elif p["5_att"] == "" and p["6_emb"] != "glove":
             continue
 
-        p["filename"] = "saved_models/q%s/%s/%s/%s%s%s/" % (p["1_question"], p["2_train"], p["3_rnn"],
-                                                      p["4_bi"], p["6_emb"], p["5_att"])
+        p["filename"] = FILEPATH / "saved_models" / f'q{p["1_question"]}' / p["2_train"] / p["3_rnn"] \
+                        / f'{p["4_bi"]}{p["6_emb"]}{p["5_att"]}'
         grid.append(p)
 
     return grid
@@ -104,7 +107,7 @@ def get_baseline_grid():
         if p["3_rnn"] != "baseline" or p["4_bi"] == "bi" or p["5_att"] == "att" or p["6_emb"] != "glove":
             continue
 
-        p["filename"] = "saved_models/q%s/%s/%s/" % (p["1_question"], p["2_train"], p["3_rnn"])
+        p["filename"] = FILEPATH / "saved_models" / f'q{p["1_question"]}'/ p["2_train"] / p["3_rnn"]
         grid.append(p)
 
     return grid
