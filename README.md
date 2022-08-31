@@ -46,8 +46,7 @@ Running `train.py` will train
 
 These are part of the results we got (when we froze the embeddings):
 
-![Performance of Quantitative Models on Dataset 1](images/results1.png)
-![Performance of Quantitative Models on Dataset 2](images/results2.png)
+![Performance of Quantitative Models on Dataset 1](images/results1.png) ![Performance of Quantitative Models on Dataset 2](images/results2.png)
 
 ### Evaluating Model Performance Against Different Splits of Training and Test Set
 **split_test.py**: compare the performance of the best models against number of training samples 
