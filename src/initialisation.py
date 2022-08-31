@@ -90,8 +90,8 @@ def get_nonbaseline_grid():
         elif p["5_att"] == "" and p["6_emb"] != "glove":
             continue
 
-        p["filename"] = FILEPATH / "saved_models" / f'q{p["1_question"]}' / p["2_train"] / p["3_rnn"] \
-                        / f'{p["4_bi"]}{p["6_emb"]}{p["5_att"]}'
+        p["filename"] = FILEPATH/"saved_models"/f'q{p["1_question"]}'/p["2_train"]/p["3_rnn"]/\
+            f'{p["4_bi"]}{p["6_emb"]}{p["5_att"]}'
         grid.append(p)
 
     return grid
