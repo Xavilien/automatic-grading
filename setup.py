@@ -60,10 +60,12 @@ def download_fasttext():
             print("fastText downloaded!")
             print("Extracting fastText...")
             extract(fasttext_zip, fasttext_folder)
-        (fasttext_folder/'crawl-300d-2M.vec').rename(fasttext_file)
+        (fasttext_folder/'crawl-300d-2M-subword.vec').rename(fasttext_file)
     print("fastText extracted!")
 
     if fasttext_folder.exists():
+        for child in fasttext_folder.glob("**/*"):
+            child.unlink()
         fasttext_folder.rmdir()
 
     if fasttext_zip.exists():
