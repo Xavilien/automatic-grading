@@ -6,26 +6,26 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 
 def train():
-    """Train all the models we want to compare"""
+    """
+    Train all the models we want to compare
 
-    # There is some logic here to count the number of models that have already been trained so that in the event that
-    # training is interrupted, the code can continue training from the last model it had been training
-    # we get the number of models already trained using get_num_models() (subtracting 1 so that we retrain the last
-    # model since we cannot guarantee that training had been completed for that model). Then we use count to skip the
-    # models that have already been trained until we get to the last model we had been training and continue from there
-    count = 0
+    We count the number of models that have already been trained so that in the event that training is interrupted,
+    the code can continue training from the last model it had been training, skipping the models that have already been
+    trained.
+    """
+    count = 1
     num_models = get_num_models()  # number of models that have already been trained
 
     # We loop through each set of hyperparameters and train 5 models each via KFOLDS cross-validation
     for p in CURR:
         for i in range(KFOLDS):
-            if count < num_models - 1:  # so that we re-train the last model that was saved
+            if count < num_models:  # so that we re-train the last model that was saved
                 count += 1
                 continue
 
             # Filename is where the trained models are saved in saved_models
             filename = p["filename"]
-            print(filename, i)
+            print(f"Model {count}/{len(CURR)*5}: {filename}/{i}.h5")
 
             answers, embeddings = load_arrays()
 
