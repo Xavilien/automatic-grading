@@ -83,6 +83,13 @@ class Attention(Layer):
         return None
 
     def call(self, x, mask=None):
+        a = self.get_attention_weights(x, mask)
+        a = k.expand_dims(a)
+        weighted_input = x * a
+        self.a = a
+        return k.sum(weighted_input, axis=1)
+
+    def get_attention_weights(self, x, mask=None):
         # ut = tanh(Ww ht + bw) where ut is the hidden representation of the hidden state ht
         ut = k.squeeze(k.dot(x, k.expand_dims(self.W)), axis=-1)
         if self.bias:
@@ -105,11 +112,9 @@ class Attention(Layer):
         # a /= K.cast(K.sum(a, axis=1, keepdims=True), K.floatx())
         a /= k.cast(k.sum(a, axis=1, keepdims=True) + k.epsilon(), k.floatx())
 
-        a = k.expand_dims(a)
-        weighted_input = x * a
-        self.a = a
-        return k.sum(weighted_input, axis=1)
+        return a
 
+    @staticmethod
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[-1]
 

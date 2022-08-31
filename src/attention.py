@@ -1,8 +1,7 @@
 import tensorflow as tf
+from tensorflow.keras.models import Model, load_model
 import numpy as np
 from models.models import Attention
-import tensorflow.keras.backend as k
-from tensorflow.keras.models import Model, load_model
 import plotly.offline as py
 import plotly.graph_objects as go
 
@@ -21,22 +20,7 @@ def get_attention(model, i):
 
     attention = model.layers[3]
 
-    # ut = tanh(Ww ht + bw) where ut is the hidden representation of the hidden state ht
-    ut = k.squeeze(k.dot(x, k.expand_dims(attention.W)), axis=-1)
-    if attention.bias:
-        ut += attention.b
-    ut = k.tanh(ut)
-
-    # Multiply hidden representation by word-level context vector (uw)
-    at = k.squeeze(k.dot(ut, k.expand_dims(attention.u)), axis=-1)
-
-    # Apply softmax to normalise
-    a = k.exp(at)
-
-    # in some cases especially in the early stages of training the sum may be almost zero
-    # and this results in NaN's. A workaround is to add a very small positive number ε to the sum.
-    # a /= K.cast(K.sum(a, axis=1, keepdims=True), K.floatx())
-    a /= k.cast(k.sum(a, axis=1, keepdims=True) + k.epsilon(), k.floatx())
+    a = attention.get_attention_weights(x)
 
     return np.array(a[0])
 
@@ -65,7 +49,7 @@ def plot_attention(weights, answer, save=False):
         xaxis=dict(title="Attention Weights", nticks=1, mirror=True, linecolor='black'),
         yaxis=dict(title="Words", ticks="outside", nticks=len(words), mirror=True, linecolor='black'),
         plot_bgcolor='black',
-        margin=go.layout.Margin(l=0, r=0, b=0, t=0,))
+        margin=go.layout.Margin(l=0, r=0, b=0, t=0, ))
 
     fig = go.Figure(data=plot1, layout=layout)
     fig.update_xaxes(showticklabels=False)
@@ -80,5 +64,5 @@ if __name__ == '__main__':
     bilstm = load_model("saved_models/attention_model.h5",
                         custom_objects={"Attention": Attention})
 
-    index = 10
+    index = 113
     plot_attention(get_attention(bilstm, index), answers[index])
