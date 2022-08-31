@@ -4,10 +4,12 @@ import numpy as np
 from models.models import Attention
 import plotly.offline as py
 import plotly.graph_objects as go
+from pathlib import Path
 
-scores = np.load("arrays/q1/scores.npy")
-sequences = np.load("arrays/q1/sequences.npy")
-answers = np.load("arrays/q1/answers.npy", allow_pickle=True)
+FILEPATH = Path(__file__).parent.absolute()
+scores = np.load(f"{FILEPATH}/arrays/q1/scores.npy")
+sequences = np.load(f"{FILEPATH}/arrays/q1/sequences.npy")
+answers = np.load(f"{FILEPATH}/arrays/q1/answers.npy", allow_pickle=True)
 
 
 def get_attention(model, i):
@@ -61,7 +63,7 @@ def plot_attention(weights, answer, save=False):
 
 
 if __name__ == '__main__':
-    bilstm = load_model("saved_models/attention_model.h5",
+    bilstm = load_model(f"{FILEPATH}/saved_models/attention_model.h5",
                         custom_objects={"Attention": Attention})
 
     index = 113
