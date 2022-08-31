@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 FILEPATH = Path(__file__).parent.absolute()
+KFOLDS = 5
 
 
 def load_arrays():
@@ -34,9 +35,6 @@ def load_arrays():
     )
 
     return answers, embeddings
-
-
-KFOLDS = 5
 
 
 def get_train_sequences(n, features, labels):
