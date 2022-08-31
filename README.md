@@ -7,16 +7,9 @@
 Source code and data for a paper on the automatic grading of online formative assessments which won the Best Paper Award at The 6th IRC Conference on Science, Engineering and Technology and Merit Award at Singapore Science and Engineering Fair 2020. The papers submitted, as well as a poster can be found [here](https://github.com/Xavilien/automatic-grading/tree/main/reports).
 
 ## Setup
-The code here uses tensorflow to run. However, since it is currently being run on an Apple Silicon device, while you could run `pip install -r requirements.txt`, the installation for tensorflow will fail for non-Apple Silicon devices, for which you will probably have to run `pip install tensorflow` as well.
+Our code is written in `python` and we run our models on tensorflow. However, since it is currently being run on an Apple Silicon device, while you could run `pip install -r requirements.txt`, the installation for tensorflow will fail for non-Apple Silicon devices, for which you will probably have to run `pip install tensorflow` as well.
 
-To run `processing.py`, you will also have to download some data from [NLTK](https://www.nltk.org/data.html) by running the following in the python console:
-```python
->>> import nltk
->>> nltk.download('punkt')
->>> nltk.download('stopwords')
-```
-
-You will also have to download the [GloVe](https://nlp.stanford.edu/projects/glove/) and [fastText](https://fasttext.cc/docs/en/english-vectors.html) word embeddings and place them in `src/data`. The GloVe embeddings we use is the `glove.6B.300d.txt` file in `glove.6B.zip`, while the fastText embeddings we use is `crawl-300d-2M-subword.vec`.
+To run `processing.py`, you will also have to download some data from [NLTK](https://www.nltk.org/data.html) as well as the [GloVe](https://nlp.stanford.edu/projects/glove/) and [fastText](https://fasttext.cc/docs/en/english-vectors.html) word embeddings. A `setup.py` script has been created to download the necessary data. However, there is actually no real need to re-run `processing.py` as the arrays used in training have already been generated in `src/arrays`. This is beneficial as the GloVe and fastText embeddings are a total of 5.56GB large.
 
 ## Usage
 1. Run processing.py to process the data (should be run only once)
@@ -25,23 +18,22 @@ You will also have to download the [GloVe](https://nlp.stanford.edu/projects/glo
 4. Run split_test.py to train the two best models
 5. Run attention.py to visualise the attention weights for a specific answer
 
-### Pre-Processing the Data
-Run `processing.py` to clean and process the training dataset as well as the word embeddings. It only has to be run once as it saves arrays so that they do not have to be regenerated each time.
+### Pre-Processing the Data (Optional)
+Run `processing.py` to clean and process the training dataset as well as the word embeddings. However, there is no real need to re-run this as the following arrays have already been generated in `src/arrays`:
 
-The following arrays will be generated in `src/arrays`:
-
-- `sequences.npy`: 
-- `answers.npy`: Student answers that have been preprocessed (cleaned and tokenized using the clean_tokenize function)
-- `scores.npy`: One-hot encoding of student scores 
-- sequences.npy: answers but with each integer representing a particular word 
+- `answers.npy`: student answers that have been pre-processed to remove punctuation, non-alphabetical tokens and stop words
+- `sequences`: `answers` but each word is represented by an integer based on `word_idx` 
+- `scores.npy`: one-hot encoding of student scores 
 - `word_idx.pickle`: dictionary that returns the id of a given word 
 - `idx_word.pickle`: dictionary that returns the word given an id 
 - `embedding_matrix_glove/fasttext/lda.npy`: embedding matrix for a particular word embedding, used for input into the embedding layer of neural network (lda has been generated only for question 1)
 
-**Note**: refer to [here](#setup) for the additional data you will have to download if you would like to re-run `processing.py`. Otherwise, the arrays have already been generated in `src/arrays`.
+These arrays will be used subsequently in the training of the neural networks.
+
+**Note**: refer to [here](#setup) for the additional data you will have to download if you would like to re-run `processing.py`. 
 
 ### Initialising Hyperparameters
-**initialisation.py**: generate the hyperparameters for all the models we want to train
+`initialisation.py` is where we generate the hyperparameters for all the models we want to train. The functions are called in `train.py` and `evaluate.py` and so there is no real need to run this, but you may want to examine the hyperparameters we search through.
 
 ### Generating Models
 **models.py**: return a Keras model given the hyperparameters
@@ -56,7 +48,7 @@ The following arrays will be generated in `src/arrays`:
 **split_test.py**: compare the performance of the best models against number of training samples 
 
 ### Visualising the Attention Weights
-Run `python attention.py` to plot attention weights for a particular model given a sample answer (default is answer 113).
+Run `attention.py` to plot attention weights for a particular model given a sample answer (default is answer 113).
 
 ![Attention Weights](images/attention.png)
 
