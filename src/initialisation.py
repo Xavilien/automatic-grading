@@ -130,9 +130,9 @@ def test(model_name):
                 saved += 1
 
 
-def num_models(directory):
+def get_num_models():
     """Find out how many saved_models have been trained -- total should be 200"""
     count = 0
-    for i in directory:
-        count += len(os.listdir(i["filename"]))
+    for i in CURR:
+        count += len(list(i["filename"].glob("*")))
     return count
