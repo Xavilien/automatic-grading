@@ -47,10 +47,10 @@ def download_glove():
 
 
 def download_fasttext():
-    fasttext_url = 'https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip'
-    fasttext_zip = FILEPATH/'src'/'data'/'crawl-300d-2M.vec.zip'
-    fasttext_folder = FILEPATH/'src'/'data'/'crawl-300d-2M'
-    fasttext_file = FILEPATH/'src'/'data'/'crawl-300d-2M.vec'
+    fasttext_url = 'https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M-subword.zip'
+    fasttext_zip = FILEPATH/'src'/'data'/'crawl-300d-2M-subword.zip'
+    fasttext_folder = FILEPATH/'src'/'data'/'crawl-300d-2M-subword'
+    fasttext_file = FILEPATH/'src'/'data'/'crawl-300d-2M-subword.vec'
 
     if not fasttext_file.exists():
         if not fasttext_folder.exists():
