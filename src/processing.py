@@ -172,7 +172,7 @@ def load_doc_embeddings(doc_embeddings, sequences):
 
 
 def generate_arrays(qn):
-    """Main function to generate the arrays. Refer to above for a list and description of the arrays generated
+    """Main function to generate the arrays. Refer to README.md for a list and description of the arrays generated
     """
     training_data = get_training_data()
     if qn == 1:
