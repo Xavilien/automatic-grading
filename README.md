@@ -33,16 +33,21 @@ These arrays will be used subsequently in the training of the neural networks.
 **Note**: refer to [here](#setup) for the additional data you will have to download if you would like to re-run `processing.py`. 
 
 ### Initialising Hyperparameters
-`initialisation.py` is where we generate the hyperparameters for all the models we want to train. The functions are called in `train.py` and `evaluate.py` and so there is no real need to run this, but you may want to examine the hyperparameters we search through.
+`initialisation.py` is where we generate 36 sets of hyperparameters for all the models we want to train. The functions are called in `train.py` and `evaluate.py` and so there is no real need to run this, but you may want to examine the hyperparameters we search through.
 
 ### Generating Models
-**models.py**: return a Keras model given the hyperparameters
+`models.py` contains the `get_model` function which generates a models given a set of hyperparameters. During training in `train.py`, we loop through all 36 sets of hyperparameters generated in `initialisation.py` and generate a model for each of them.
 
 ### Training Models
-**train.py**: train all models
+Running `train.py` will train 
 
 ### Evaluating All Models
 **evaluate.py**: generate the results from the trained models
+
+These are part of the results we got (when we froze the embeddings):
+
+![Performance of Quantitative Models on Dataset 1](images/results1.png)
+![Performance of Quantitative Models on Dataset 2](images/results2.png)
 
 ### Evaluating Model Performance Against Different Splits of Training and Test Set
 **split_test.py**: compare the performance of the best models against number of training samples 

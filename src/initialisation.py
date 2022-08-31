@@ -131,7 +131,7 @@ def test(model_name):
 
 
 def get_num_models():
-    """Find out how many saved_models have been trained -- total should be 200"""
+    """Find out how many saved_models have been trained -- total should be 180"""
     count = 0
     for i in CURR:
         count += len(list(i["filename"].glob("*")))
