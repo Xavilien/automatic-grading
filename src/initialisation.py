@@ -114,20 +114,18 @@ def get_baseline_grid():
 CURR = get_baseline_grid() + get_nonbaseline_grid()
 
 
-def test(model_name):
+def get_model_number(model_name):
     """Find out which model number a particular filename is based on the current model name"""
-    saved = 0
-    for i in CURR:
-        qn, train, rnn, bi, emb, att = i["1_question"], i["2_train"], i["3_rnn"], i["4_bi"], i["6_emb"], i["5_att"]
-        filename = f"saved_models/q{qn}/{train}/{rnn}/{bi}{emb}{att}"
+    model_name = model_name.split()
+    model_number = None
 
-        for k in range(KFOLDS):
-            f = filename + " " + str(k)
-            print(f)
-            if f == model_name:
-                return saved
-            else:
-                saved += 1
+    for i, x in enumerate(CURR):
+        if x['filename'] == FILEPATH/model_name[0]:
+            model_number = i
+            break
+
+    if model_number is not None and len(model_name) == 2:
+        return model_number * 5 + int(model_name[1])
 
 
 def get_num_models():
