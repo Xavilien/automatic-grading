@@ -2,8 +2,6 @@ from initialisation import *
 from models.models import get_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
-# TODO: Clean up train.py
-
 
 def train():
     """
