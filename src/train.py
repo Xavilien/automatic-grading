@@ -1,4 +1,4 @@
-from initialisation import *
+from initialisation import CURR, KFOLDS, get_num_models, load_arrays, get_train_sequences
 from models.models import get_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
