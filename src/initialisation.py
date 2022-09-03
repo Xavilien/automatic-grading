@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import ParameterGrid
-import os
 from pathlib import Path
 
 FILEPATH = Path(__file__).parent.absolute()
@@ -66,7 +65,7 @@ def get_parametergrid():
 
 def score(onehot):
     """Turn one hot encoding/softmax output into actual score"""
-    return [list(x).index(max(x)) for x in onehot]
+    return list(map(np.argmax, onehot))
 
 
 def get_nonbaseline_grid():
