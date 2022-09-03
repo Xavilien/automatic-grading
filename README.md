@@ -12,11 +12,11 @@ Our code is written in `python` and we run our models on tensorflow. However, si
 To run `processing.py`, you will also have to download some data from [NLTK](https://www.nltk.org/data.html) as well as the [GloVe](https://nlp.stanford.edu/projects/glove/) and [fastText](https://fasttext.cc/docs/en/english-vectors.html) word embeddings. A `setup.py` script has been created to download the necessary data. However, there is actually no real need to re-run `processing.py` as the arrays used in training have already been generated in `src/arrays`. This is beneficial as the GloVe and fastText embeddings are a total of 5.56GB large.
 
 ## Usage
-1. Run processing.py to process the data (should be run only once)
-2. Run train.py to train all the different types of models (5 times each)
-3. Run evaluate.py to evaluate the models trained in 2.
-4. Run split_test.py to train the two best models
-5. Run attention.py to visualise the attention weights for a specific answer
+1. Run `processing.py` to process the data (optional)
+2. Run `train.py` to train all the different types of models
+3. Run `evaluate.py` to evaluate the models trained
+4. Run `split_test.py` to train the two best models to examine how performance varies with the amount of training data
+5. Run `attention.py` to visualise the attention weights for a specific answer
 
 ### Pre-Processing the Data (Optional)
 Run `processing.py` to clean and process the training dataset as well as the word embeddings. However, there is no real need to re-run this as the following arrays have already been generated in `src/arrays`:
@@ -39,19 +39,19 @@ These arrays will be used subsequently in the training of the neural networks.
 `models.py` contains the `get_model` function which generates a models given a set of hyperparameters. During training in `train.py`, we loop through all 36 sets of hyperparameters generated in `initialisation.py` and generate a model for each of them.
 
 ### Training Models
-Running `train.py` will train 
+Running `train.py` will train 5 models for each of the 36 sets of hyperparameters generated in `initialisation.py`, resulting in a total of 180 models. We use 5-fold cross-validation and so each of the 5 models is trained on a different subset of 80% of the training data while the other 20% is used for validation.
+
+The function also counts the number of models that have already been trained so that in the event that training is interrupted, running the function again will resume training from the last model that it had been training in order to save time.
 
 ### Evaluating All Models
-**evaluate.py**: generate the results from the trained models
+Running `evaluate.py`: generates the results from the trained models as a csv file saved in `src/results`. We use 5-fold cross-validation and the metrics we use are accuracy, loss and F1 score. The default option is to take the mean of the 5 models, but passing "best" or "all" into `evaluate()` will save the best result or all of the results respectively. 
 
-These are part of the results we got (when we froze the embeddings):
+The results that we generated for our research paper can already be found in `src/results`. The following tables showcase half of those results (for when the embeddings of the models were not trained:
 
-
-<p align="center">
-  <img alt="Light" src="images/results1.png" width="45%">
-&nbsp; &nbsp; &nbsp; &nbsp;
-  <img alt="Dark" src="images/results2.png" width="45%">
-</p>
+<div style="text-align: center;">
+    <img alt="Performance of Quantitative Models on Dataset 1" src="images/results1.png" width="48%"/>
+    <img alt="Performance of Quantitative Models on Dataset 2" src="images/results2.png" width="48%"/>
+</div>
 
 ### Evaluating Model Performance Against Different Splits of Training and Test Set
 **split_test.py**: compare the performance of the best models against number of training samples 
@@ -66,7 +66,7 @@ Some time has passed since this project was completed. Upon looking back, there 
 
 Firstly, it would have been good to create a cross-validation set so that we have three sets in total: a training set, a validation set and a test set. This is because we are currently optimising the hyperparameters on the test set, which means that the results we put forth portray a biased estimate of how our models will do on unseen data.
 
-Secondly, we would not have used early stopping and model checkpoints in our code in order to save the best performing model. Again, this method relies on the test set to pick the best model and so our results are biased because we are essentially optimising on the test set. Instead, other methods of addressing overfitting can be employed, including an increase in regularisation and creating more training data.
+Secondly, our training algorithm used early stopping and model checkpoints in order to save the model that performed best on the validation set. However, we understand that this is not the best practice as it similarly relies on the test set to pick the best model. Thus, our results become biased because we are essentially optimising on the test set. Instead, other methods of addressing over-fitting can be employed, including an increase in regularisation and creating more training data.
 
 Thirdly, to address the choice of models, we understand that the current state-of-the-art models are mostly transformers instead of LSTMs. It would be interesting to train a transformer (or fine-tune an existing one) on this dataset to compare the performance.
 
