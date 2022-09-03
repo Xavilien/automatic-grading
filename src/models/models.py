@@ -124,12 +124,14 @@ class Attention(Layer):
 
 class Sum(Layer):
     """Custom layer that just does a simple sum of the vector input, not sure why keras doesnt have it"""
-    def __init__(self):
-        super(Sum, self).__init__()
+    def __init__(self, **kwargs):
+        super(Sum, self).__init__(**kwargs)
 
-    def call(self, inputs, **kwargs):
+    @staticmethod
+    def call(inputs):
         return k.sum(inputs, axis=1)
 
+    @staticmethod
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[-1]
 

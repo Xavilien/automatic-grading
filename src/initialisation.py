@@ -131,5 +131,13 @@ def get_num_models():
     """Find out how many saved_models have been trained -- total should be 180"""
     count = 0
     for i in CURR:
-        count += len(list(i["filename"].glob("*")))
+        count += len(list(i["filename"].glob("*.h5")))
+    return count
+
+
+def get_num_predictions():
+    """Find out how many sets of results have been generated -- total should be 36"""
+    count = 0
+    for i in CURR:
+        count += len(list(i["filename"].glob("*.pickle")))
     return count

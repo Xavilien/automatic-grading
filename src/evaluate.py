@@ -1,98 +1,120 @@
-from initialisation import *
-from saved_models import Attention, Sum
-
+import pandas as pd
+import numpy as np
 import pickle
+from pathlib import Path
 
 from sklearn.metrics import accuracy_score, f1_score
 from tensorflow.keras.losses import categorical_crossentropy
-import pandas as pd
 from tensorflow.keras.models import load_model
 
-# TODO: Clean up evaluate.py
+from initialisation import CURR, KFOLDS, load_arrays, score, get_train_sequences, get_num_predictions
+from models.models import Attention, Sum
 
 
-def get_predictions(filename, x_valid, y_valid, att, rnn):
-	"""Get predictions based on a specific trained model and the validation set"""
-
-	if att == "att":
-		model = load_model(filename, custom_objects={"Attention": Attention})
-	elif rnn == "baseline":
-		model = load_model(filename, custom_objects={"Sum": Sum})
-	else:
-		model = load_model(filename)
-
-	predictions = model.predict(x_valid, verbose=0, batch_size=1, steps=None)
-
-	output, actual = score(predictions), score(y_valid)
-
-	results = {"Softmax": [predictions, y_valid], "Scores": [output, actual]}
-
-	return results
+FILEPATH = Path(__file__).parent.absolute()
 
 
-def get_results(filename, att, rnn):
-	results = []
+def get_predictions(p):
+	"""Generate predictions for all 5 models trained for a particular set of hyperparameters"""
+	predictions = []
 
 	for i in range(KFOLDS):
-		print(filename, i)
-
 		answers, _ = load_arrays()
 
-		# Get the training and Validation Data
-		sequences = filename[7:9] + "_sequences"
-		scores = filename[7:9] + "_scores"
+		# Get the training and validation data (each model has a different set due to 5-fold cross validation
+		sequences = f"q{p['1_question']}_sequences"
+		scores = f"q{p['1_question']}_scores"
 		_, x_valid, _, y_valid = get_train_sequences(i, answers[sequences], answers[scores])
 
-		# Get the predictions that the model gives
-		results.append(get_predictions(f'{filename}{i}.h5', i, x_valid, y_valid, att, rnn))
+		# Load the trained model
+		filename = f"{p['filename']}/{i}.h5"
+		if p['5_att'] == "att":
+			model = load_model(filename, custom_objects={"Attention": Attention})
+		elif p['3_rnn'] == "baseline":
+			model = load_model(filename, custom_objects={"Sum": Sum})
+		else:
+			model = load_model(filename)
+
+		# Generate the predictions
+		softmax = model.predict(x_valid, verbose=0, batch_size=1, steps=None)
+		predictions.append({"Softmax": [softmax, y_valid], "Scores": [score(softmax), score(y_valid)]})
 
 	# Save the predictions so that we don't have to recalculate again
-	pickle.dump(results, open(filename + "results.pickle", "wb"))
+	pickle.dump(predictions, open(p['filename']/"predictions.pickle", "wb"))
+
+	return predictions
 
 
-def evaluate(p):
-	"""Generate the accuracy, loss and f1 results for a particular model"""
-	filename = p["filename"]  # where the trained saved_models are saved
+def evaluate(output="mean"):
+	"""
+	Generate the mean/best/all accuracy, loss and f1 results for all sets of hyperparameters
 
-	"""global count, saved, table
-	if count >= saved:
-		get_results(filename, p["5_att"], p["3_rnn"])"""
+	This occurs in three steps:
 
-	results = pickle.load(open(filename + "results.pickle", "rb"))
+	1) We generate the predictions for each of the 180 models on the validation test set
+	2) We evaluate the predictions of each model with the actual y labels on accuracy, loss and f1 score
+	3) We compile the mean/best/all accuracy, loss and f1 results into a csv file that we save
 
-	accuracy = []
-	loss = []
-	f1 = []
+	Similar to training, we count the number of models that we have made predictions for so that we can skip those
+	whose predictions we have already made in order to save time in the event the code is interrupted.
 
-	for i in range(KFOLDS):
-		# Get accuracy, kappa, quadratic weighted kappa and mean error
-		predictions = results[i]["Scores"][0]
-		actual = results[i]["Scores"][1]
-
-		# Calculate Accuracy, F1 and loss
-		accuracy.append(accuracy_score(actual, predictions))
-		f1.append(f1_score(actual, predictions, average='weighted'))
-		c = np.array(categorical_crossentropy(results[i]["Softmax"][1], results[i]["Softmax"][0]))
-		loss.append(sum(c) / len(c))
-
-	# Save the results to the table that will be used to generate the CSV
-	table[filename] = [accuracy, loss, f1]
-
-
-if __name__ == '__main__':
+	Parameters
+		output : "mean", "best", "all"
+	"""
 	table = {}
-	# count = 0
-	# saved = num_models() - 200
+	count = 1
+	num_predictions = get_num_predictions()
 
-	for params in CURR:
-		evaluate(params)
+	for p in CURR:
+		filename = p["filename"]  # where the trained models have been saved
 
-	x = [["%.03f" % (sum(j)/KFOLDS) for j in table[i]] for i in table.keys()]
+		# Step 1: Generating predictions
+		# Only generate if predictions have not been generated yet
+		if count > num_predictions:
+			print(f"Results {count}/{len(CURR)}: {filename}")
+			predictions = get_predictions(p)  # also saves results to the folder containing the 5 trained models
+		else:
+			predictions = pickle.load(open(filename/"predictions.pickle", "rb"))  # opens results from the folder
 
-	r = pd.DataFrame(
+		# Step 2: Evaluating the predictions
+		accuracy = []
+		loss = []
+		f1 = []
+
+		for i in range(KFOLDS):
+			scores = predictions[i]["Scores"]
+			softmax = predictions[i]["Softmax"]
+
+			# Calculate Accuracy, F1 and loss
+			accuracy.append(accuracy_score(scores[0], scores[1]))
+			f1.append(f1_score(scores[0], scores[1], average='weighted'))
+			loss.append(np.mean(categorical_crossentropy(softmax[0], softmax[1])))
+
+		# Save the results to the table that will be used to generate the CSV
+		name = " ".join([f'q{p["1_question"]}', p["2_train"], p["3_rnn"], f'{p["4_bi"]}{p["6_emb"]}{p["5_att"]}'])
+		table[name] = [accuracy, loss, f1]
+
+		count += 1
+
+	# Step 3: Compiling the results
+	if output == "mean":
+		x = [["%.03f" % np.mean(j) for j in table[i]] for i in table.keys()]
+	elif output == "best":
+		x = [["%.03f" % np.max(j) for j in table[i]] for i in table.keys()]
+	elif output == "all":
+		x = [[np.round(j, 3) for j in table[i]] for i in table.keys()]
+	else:
+		print("Output must either be 'mean', 'best' or 'all'")
+		return
+
+	results = pd.DataFrame(
 		x,
-		index=[" ".join(i.split('/')[1:-1]) for i in list(table.keys())],
+		index=table.keys(),
 		columns=["Accuracy", "Loss", "F1 Score"],
 	)
 
-	r.to_csv("results/results.csv")
+	results.to_csv(FILEPATH/f"results/results_{output}.csv")
+
+
+if __name__ == '__main__':
+	evaluate()
