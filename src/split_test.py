@@ -115,8 +115,8 @@ def evaluate():
 
 def plot_results(mode="separate", save=False):
     results = [
-        np.load(str(bigru_glove_att["filename"][0] / "metrics.npy")),
-        np.load(str(bilstm_fasttext_att["filename"][0] / "metrics.npy"))
+        np.load(str(bigru_glove_att["filename"][0] / "results.npy")),
+        np.load(str(bilstm_fasttext_att["filename"][0] / "results.npy"))
     ]
 
     p = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
