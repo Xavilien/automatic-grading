@@ -95,6 +95,9 @@ def get_predictions(filename, qn):
 
 def evaluate():
     for qn, filename in enumerate(bigru_glove_att["filename"] + bilstm_fasttext_att["filename"]):
+        if (filename / "results.npy").exists():
+            continue
+
         if (filename / "predictions.pickle").exists():
             predictions = pickle.load(open(filename / "predictions.pickle", "rb"))
         else:
