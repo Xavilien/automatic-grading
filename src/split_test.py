@@ -113,64 +113,43 @@ def evaluate():
         np.save(str(filename / "results.npy"), results)
 
 
-def plot_results(save=False):
-    for qn, filename in enumerate(bigru_glove_att["filename"] + bilstm_fasttext_att["filename"]):
-        results = np.load(str(filename / "metrics.npy"))
-        p = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-        x = [int(i * 10 * 25) for i in p]
-
-        acc = go.Scatter(name="Acccuracy", x=x, y=[x[0] for x in results])
-        f1 = go.Scatter(name="F1", x=x, y=[x[1] for x in results])
-
-        title = f"Dataset {qn+1} Best Model Performance against Number of Training Responses"
-        layout = go.Layout(title=dict(text=title, xanchor="center", x=0.5),
-                           xaxis=dict(title="Number of Training Responses", ticks="outside", mirror=True,
-                                      linecolor="black"),
-                           yaxis=dict(title="Performance", ticks="outside", mirror=True, linecolor="black"),
-                           margin=dict(t=30, b=0, l=0, r=0))
-
-        fig = go.Figure(data=[acc, f1], layout=layout)
-
-        if qn == 0:
-            fig.update_yaxes(range=[0.6, 0.85])
-        else:
-            fig.update_yaxes(range=[0.0, 0.7])
-
-        py.iplot(fig)
-
-        if save:
-            fig.write_image("Performance" + filename[7:9] + ".pdf", format="pdf")
-
-
-def plot_results2(filename1, filename2, save=False):
-    results1 = np.load(str(filename1 / "metrics.npy"))
-    results2 = np.load(str(filename2 / "metrics.npy"))
+def plot_results(mode="separate", save=False):
+    results = [
+        np.load(str(bigru_glove_att["filename"][0] / "metrics.npy")),
+        np.load(str(bilstm_fasttext_att["filename"][0] / "metrics.npy"))
+    ]
 
     p = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     x = [int(i * 10 * 25) for i in p]
 
-    acc1 = go.Scatter(name="Acccuracy (Dataset 1)", x=x, y=[x[0] for x in results1])
-    f11 = go.Scatter(name="F1 (Dataset 1)", x=x, y=[x[1] for x in results1])
-
-    acc2 = go.Scatter(name="Acccuracy (Dataset 2)", x=x, y=[x[0] for x in results2])
-    f12 = go.Scatter(name="F1 (Dataset 2)", x=x, y=[x[1] for x in results2])
-
-    title = "Performance of Best Models against Number of Training Responses"
-
-    layout = go.Layout(title=dict(text=title, xanchor="center", x=0.5),
+    acc = [go.Scatter(name=f"Accuracy (Dataset {i+1})", x=x, y=[x[0] for x in results[i]]) for i in range(2)]
+    f1 = [go.Scatter(name=f"F1 (Dataset {i+1})", x=x, y=[x[1] for x in results[i]]) for i in range(2)]
+    yaxes_range = [[0.6, 0.85], [0.0, 0.70]]
+    layout = go.Layout(title=dict(xanchor="center", x=0.5),
                        xaxis=dict(title="Number of Training Responses", ticks="outside", mirror=True,
                                   linecolor="black"),
                        yaxis=dict(title="Performance", ticks="outside", mirror=True, linecolor="black"),
                        margin=dict(t=30, b=0, l=0, r=0))
 
-    fig = go.Figure(data=[acc1, f11, acc2, f12], layout=layout)
+    if mode == "separate":
+        for i in range(2):
+            fig = go.Figure(data=[acc[i], f1[i]], layout=layout)
+            fig.update_layout(title_text=f"Dataset {i + 1} Best Model Performance against Number of Training Responses")
+            fig.update_yaxes(range=yaxes_range[i])
+            py.iplot(fig)
+            if save:
+                fig.write_image(f"Performance {i+1}.pdf", format="pdf")
 
-    # fig.update_yaxes(range=[0.6, 0.85])
+    elif mode == "together":
+        fig = go.Figure(data=[acc[0], f1[0], acc[1], f1[1]], layout=layout)
+        fig.update_layout(title_text="Performance of Best Models against Number of Training Responses")
+        py.iplot(fig)
+        if save:
+            fig.write_image("Performance (Both).pdf", format="pdf")
 
-    py.iplot(fig)
-
-    if save:
-        fig.write_image("Performance.pdf", format="pdf")
+    else:
+        print("Invalid mode!")
+        return
 
 
 def train():
@@ -220,9 +199,5 @@ def train():
 if __name__ == '__main__':
     train()
     evaluate()
-
-    filename1 = bigru_glove_att["filename"][0]
-    filename2 = bilstm_fasttext_att["filename"][0]
-
-    plot_results()
-    plot_results2(filename1, filename2)
+    plot_results("separate")
+    plot_results("together")
