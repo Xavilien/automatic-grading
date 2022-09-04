@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, f1_score
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.models import load_model
 
-from initialisation import CURR, KFOLDS, load_arrays, score, get_train_sequences, get_num_predictions
+from initialisation import GRID, KFOLDS, load_arrays, score, get_train_sequences, get_num_predictions
 from models.models import Attention, Sum
 
 
@@ -40,7 +40,7 @@ def get_predictions(p):
 		predictions.append({"Softmax": [softmax, y_valid], "Scores": [score(softmax), score(y_valid)]})
 
 	# Save the predictions so that we don't have to recalculate again
-	pickle.dump(predictions, open(p['filename']/"predictions.pickle", "wb"))
+	pickle.dump(predictions, open(p['filename'] / "predictions.pickle", "wb"))
 
 	return predictions
 
@@ -65,13 +65,13 @@ def evaluate(output="mean"):
 	count = 1
 	num_predictions = get_num_predictions()
 
-	for p in CURR:
+	for p in GRID:
 		filename = p["filename"]  # where the trained models have been saved
 
 		# Step 1: Generating predictions
 		# Only generate if predictions have not been generated yet
 		if count > num_predictions:
-			print(f"Results {count}/{len(CURR)}: {filename}")
+			print(f"Results {count}/{len(GRID)}: {filename}")
 			predictions = get_predictions(p)  # also saves results to the folder containing the 5 trained models
 		else:
 			predictions = pickle.load(open(filename/"predictions.pickle", "rb"))  # opens results from the folder
@@ -86,9 +86,9 @@ def evaluate(output="mean"):
 			softmax = predictions[i]["Softmax"]
 
 			# Calculate Accuracy, F1 and loss
-			accuracy.append(accuracy_score(scores[0], scores[1]))
-			f1.append(f1_score(scores[0], scores[1], average='weighted'))
-			loss.append(np.mean(categorical_crossentropy(softmax[0], softmax[1])))
+			accuracy.append(accuracy_score(scores[1], scores[0]))
+			f1.append(f1_score(scores[1], scores[0], average='weighted'))
+			loss.append(np.mean(categorical_crossentropy(softmax[1], softmax[0])))
 
 		# Save the results to the table that will be used to generate the CSV
 		name = " ".join([f'q{p["1_question"]}', p["2_train"], p["3_rnn"], f'{p["4_bi"]}{p["6_emb"]}{p["5_att"]}'])

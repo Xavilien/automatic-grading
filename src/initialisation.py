@@ -63,11 +63,6 @@ def get_parametergrid():
     return ParameterGrid(hyperparameters)
 
 
-def score(onehot):
-    """Turn one hot encoding/softmax output into actual score"""
-    return list(map(np.argmax, onehot))
-
-
 def get_nonbaseline_grid():
     """Gridsearch for all non-baseline saved_models"""
     grid = []
@@ -89,8 +84,8 @@ def get_nonbaseline_grid():
         elif p["5_att"] == "" and p["6_emb"] != "glove":
             continue
 
-        p["filename"] = FILEPATH/"saved_models"/f'q{p["1_question"]}'/p["2_train"]/p["3_rnn"]/\
-            f'{p["4_bi"]}{p["6_emb"]}{p["5_att"]}'
+        p["filename"] = FILEPATH / "saved_models" / f'q{p["1_question"]}' / p["2_train"] / p["3_rnn"] / \
+                        f'{p["4_bi"]}{p["6_emb"]}{p["5_att"]}'
         grid.append(p)
 
     return grid
@@ -104,13 +99,18 @@ def get_baseline_grid():
         if p["3_rnn"] != "baseline" or p["4_bi"] == "bi" or p["5_att"] == "att" or p["6_emb"] != "glove":
             continue
 
-        p["filename"] = FILEPATH / "saved_models" / f'q{p["1_question"]}'/ p["2_train"] / p["3_rnn"]
+        p["filename"] = FILEPATH / "saved_models" / f'q{p["1_question"]}' / p["2_train"] / p["3_rnn"]
         grid.append(p)
 
     return grid
 
 
-CURR = get_baseline_grid() + get_nonbaseline_grid()
+GRID = get_baseline_grid() + get_nonbaseline_grid()
+
+
+def score(onehot):
+    """Turn one hot encoding/softmax output into actual score"""
+    return list(map(np.argmax, onehot))
 
 
 def get_model_number(model_name):
@@ -118,8 +118,8 @@ def get_model_number(model_name):
     model_name = model_name.split()
     model_number = None
 
-    for i, x in enumerate(CURR):
-        if x['filename'] == FILEPATH/model_name[0]:
+    for i, x in enumerate(GRID):
+        if x['filename'] == FILEPATH / model_name[0]:
             model_number = i
             break
 
@@ -130,7 +130,7 @@ def get_model_number(model_name):
 def get_num_models():
     """Find out how many saved_models have been trained -- total should be 180"""
     count = 0
-    for i in CURR:
+    for i in GRID:
         count += len(list(i["filename"].glob("*.h5")))
     return count
 
@@ -138,6 +138,6 @@ def get_num_models():
 def get_num_predictions():
     """Find out how many sets of results have been generated -- total should be 36"""
     count = 0
-    for i in CURR:
+    for i in GRID:
         count += len(list(i["filename"].glob("*.pickle")))
     return count

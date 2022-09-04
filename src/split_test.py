@@ -1,55 +1,59 @@
-from initialisation import *
-from saved_models import get_model
-from evaluate import score, get_predictions
-
-from sklearn.model_selection import ParameterGrid
-from sklearn.utils import shuffle
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-
 import pickle
-from sklearn.metrics import accuracy_score, f1_score
+import numpy as np
+from pathlib import Path
 
 import plotly.offline as py
 import plotly.graph_objs as go
 
+from sklearn.model_selection import ParameterGrid
+from sklearn.utils import shuffle
+from sklearn.metrics import accuracy_score, f1_score
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.models import load_model
+
+from initialisation import load_arrays
+from models.models import get_model, Attention
+from evaluate import score
+
+
+FILEPATH = Path(__file__).parent.absolute()
+
 # TODO: Clean up split_test.py
 
-split = [i / 10 for i in range(1, 10, 1)]
+split = [i / 10 for i in range(1, 10)]
 
 bigru_glove_att = {
-    "question": ["1"],
-    "train": ["freeze"],
-    "rnn": ["gru"],
-    "bi": ["bi"],
-    "att": ["att"],
-    "emb": ["glove"],
-    "split": split,
-    "filename": ["saved_models/q1/best/"],
+    "1_question": ["1"],
+    "2_train": ["freeze"],
+    "3_rnn": ["gru"],
+    "4_bi": ["bi"],
+    "5_att": ["att"],
+    "6_emb": ["glove"],
+    "7_split": split,
+    "filename": [FILEPATH/"saved_models"/"q1"/"best"],
 }
 
 bilstm_fasttext_att = {
-    "question": ["2"],
-    "train": ["freeze"],
-    "rnn": ["lstm"],
-    "bi": ["bi"],
-    "att": ["att"],
-    "emb": ["fasttext"],
-    "split": split,
-    "filename": ["saved_models/q2/best/"],
+    "1_question": ["2"],
+    "2_train": ["freeze"],
+    "3_rnn": ["lstm"],
+    "4_bi": ["bi"],
+    "5_att": ["att"],
+    "6_emb": ["fasttext"],
+    "7_split": split,
+    "filename": [FILEPATH/"saved_models"/"q2"/"best"],
 }
 
 q1 = list(ParameterGrid(bigru_glove_att))
 q2 = list(ParameterGrid(bilstm_fasttext_att))
-models = q1 + q2
-
-RANDOM_STATE = 50
+GRID = q1 + q2
 
 
 def create_train_valid(features, labels, train_fraction):
     """Create training and validation features and labels."""
 
     # Randomly shuffle features and labels
-    features, labels = shuffle(features, labels, random_state=RANDOM_STATE)
+    features, labels = shuffle(features, labels, random_state=50)
 
     # Decide on number of samples for training
     train_end = int(train_fraction * 10 * 25)
@@ -63,146 +67,84 @@ def create_train_valid(features, labels, train_fraction):
     return x_train, x_valid, y_train, y_valid
 
 
-def run(p):
-    filename = p["filename"] + str(int(p["split"] * 10))
-    print(filename)
-
-    answers, embeddings = load_arrays()
-
-    # Get the training and Validation Data
-    sequences = filename[7:9] + "_sequences"
-    scores = filename[7:9] + "_scores"
-    x_train, x_valid, y_train, y_valid = create_train_valid(answers[sequences], answers[scores], p["split"])
-
-    # Load the correct embeddings
-    emb = filename[7:9] + "_" + p["emb"]
-
-    t = False  # Whether to train embeddings or not
-    if p["train"] == "train":
-        t = True
-
-    model = get_model(t, p["rnn"], p["bi"], embeddings[emb], p["att"], p["question"])
-
-    # Simple early stopping
-    es = EarlyStopping(monitor='val_accuracy', mode='max', verbose=1, patience=5)
-
-    # Save the best model via checkpoints
-    mc = ModelCheckpoint(filename + ".h5",
-                         monitor='val_accuracy',
-                         mode='max',
-                         verbose=1,
-                         save_best_only=True)
-
-    model.fit(x_train, y_train, epochs=30, batch_size=1,
-              validation_data=(x_valid, y_valid),
-              verbose=1,
-              callbacks=[es, mc])
-
-
-def get_results(filename, att, rnn):
-    results = []
+def get_predictions(filename, qn):
+    predictions = []
 
     for i in split:
-        print(filename, i)
-        # notif(filename + str(i))
+        print(f"{filename}/{i * 10:.0f}.h5")
 
         answers, embeddings = load_arrays()
 
         # Get the training and Validation Data
-        sequences = filename[7:9] + "_sequences"
-        scores = filename[7:9] + "_scores"
+        sequences = f"q{qn}_sequences"
+        scores = f"q{qn}_scores"
         _, x_valid, _, y_valid = create_train_valid(answers[sequences], answers[scores], i)
 
-        # Get the predictions that the model gives
-        results.append(get_predictions(f'{filename}{int(i * 10)}.h5', x_valid, y_valid, att, rnn))
+        # Load the trained model
+        model = load_model(filename / f"{i * 10:.0f}.h5", custom_objects={"Attention": Attention})
+
+        # Generate the predictions
+        softmax = model.predict(x_valid, verbose=0, batch_size=1, steps=None)
+        predictions.append({"Softmax": [softmax, y_valid], "Scores": [score(softmax), score(y_valid)]})
 
     # Save the predictions so that we don't have to recalculate again
-    pickle.dump(results, open(filename + "results.pickle", "wb"))
+    pickle.dump(predictions, open(filename / "predictions.pickle", "wb"))
+
+    return predictions
 
 
-def metrics(result):
-    predictions = result[0]
-    actual = result[1]
-
-    acc = accuracy_score(actual, predictions)
-    f1 = f1_score(actual, predictions, average="weighted")
-
-    return acc, f1
-
-
-def evaluate(filename):
-    results = pickle.load(open(filename + "results.pickle", "rb"))
-
-    for i in range(9):
-        pass
-
-    evaluation = []
-
-    for i in range(9):
-        result = results[i]["Scores"]
-
-        acc, f1 = metrics(result)
-
-        evaluation.append(np.array([acc, f1]))
-
-    evaluation = np.array(evaluation)
-    np.save(filename + "metrics.npy", evaluation)
-    plot_results(filename)
-
-
-def evaluate2(filename):
-    results = pickle.load(open(filename + "results.pickle", "rb"))
-    results1 = pickle.load(open(filename + "Results1.pickle", "rb"))
-
-    for i in range(9):
-        pass
-
-    evaluation = []
-
-    for i in range(9):
-        result = results[i]["Scores"]
-        result1 = results1[i]["Scores"]
-
-        acc, f1 = metrics(result)
-        acc1, f11 = metrics(result1)
-
-        if acc > acc1:
-            evaluation.append(np.array([acc, f1]))
+def evaluate():
+    for qn, filename in enumerate(bigru_glove_att["filename"] + bilstm_fasttext_att["filename"]):
+        if (filename / "predictions.pickle").exists():
+            predictions = pickle.load(open(filename / "predictions.pickle", "rb"))
         else:
-            evaluation.append(np.array([acc1, f11]))
+            predictions = get_predictions(filename, qn+1)
 
-    plot_results(filename, evaluation)
+        results = []
 
+        for i in range(9):
+            scores = predictions[i]["Scores"]
 
-def plot_results(filename):
-    results = np.load(filename + "metrics.npy")
-    p = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    x = [int(i * 10 * 25) for i in p]
+            acc = accuracy_score(scores[1], scores[0])
+            f1 = f1_score(scores[1], scores[0], average="weighted")
 
-    acc = go.Scatter(name="Acccuracy", x=x, y=[x[0] for x in results])
-    f1 = go.Scatter(name="F1", x=x, y=[x[1] for x in results])
+            results.append(np.array([acc, f1]))
 
-    title = "Dataset %s Best Model Performance against Number of Training Responses" % filename[8]
-    layout = go.Layout(title=dict(text=title, xanchor="center", x=0.5),
-                       xaxis=dict(title="Number of Training Responses", ticks="outside", mirror=True,
-                                  linecolor="black"),
-                       yaxis=dict(title="Performance", ticks="outside", mirror=True, linecolor="black"),
-                       margin=dict(t=30, b=0, l=0, r=0))
-
-    fig = go.Figure(data=[acc, f1], layout=layout)
-
-    if filename[7:9] == "q1":
-        fig.update_yaxes(range=[0.6, 0.85])
-    else:
-        fig.update_yaxes(range=[0.0, 0.7])
-
-    fig.write_image("Performance" + filename[7:9] + ".pdf", format="pdf")
-    py.iplot(fig)
+        np.save(str(filename / "results.npy"), results)
 
 
-def plot_results2(filename1, filename2):
-    results1 = np.load(filename1 + "metrics.npy")
-    results2 = np.load(filename2 + "metrics.npy")
+def plot_results(save=False):
+    for qn, filename in enumerate(bigru_glove_att["filename"] + bilstm_fasttext_att["filename"]):
+        results = np.load(str(filename / "metrics.npy"))
+        p = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+        x = [int(i * 10 * 25) for i in p]
+
+        acc = go.Scatter(name="Acccuracy", x=x, y=[x[0] for x in results])
+        f1 = go.Scatter(name="F1", x=x, y=[x[1] for x in results])
+
+        title = f"Dataset {qn+1} Best Model Performance against Number of Training Responses"
+        layout = go.Layout(title=dict(text=title, xanchor="center", x=0.5),
+                           xaxis=dict(title="Number of Training Responses", ticks="outside", mirror=True,
+                                      linecolor="black"),
+                           yaxis=dict(title="Performance", ticks="outside", mirror=True, linecolor="black"),
+                           margin=dict(t=30, b=0, l=0, r=0))
+
+        fig = go.Figure(data=[acc, f1], layout=layout)
+
+        if qn == 0:
+            fig.update_yaxes(range=[0.6, 0.85])
+        else:
+            fig.update_yaxes(range=[0.0, 0.7])
+
+        py.iplot(fig)
+
+        if save:
+            fig.write_image("Performance" + filename[7:9] + ".pdf", format="pdf")
+
+
+def plot_results2(filename1, filename2, save=False):
+    results1 = np.load(str(filename1 / "metrics.npy"))
+    results2 = np.load(str(filename2 / "metrics.npy"))
 
     p = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     x = [int(i * 10 * 25) for i in p]
@@ -213,7 +155,7 @@ def plot_results2(filename1, filename2):
     acc2 = go.Scatter(name="Acccuracy (Dataset 2)", x=x, y=[x[0] for x in results2])
     f12 = go.Scatter(name="F1 (Dataset 2)", x=x, y=[x[1] for x in results2])
 
-    title = "Performance of Best saved_models against Number of Training Responses"
+    title = "Performance of Best Models against Number of Training Responses"
 
     layout = go.Layout(title=dict(text=title, xanchor="center", x=0.5),
                        xaxis=dict(title="Number of Training Responses", ticks="outside", mirror=True,
@@ -225,37 +167,62 @@ def plot_results2(filename1, filename2):
 
     # fig.update_yaxes(range=[0.6, 0.85])
 
-    fig.write_image("Performance.pdf", format="pdf")
-    # py.iplot(fig)
+    py.iplot(fig)
+
+    if save:
+        fig.write_image("Performance.pdf", format="pdf")
 
 
-def check_scores():
-    answers, _ = load_arrays()
+def train():
+    num_models = len(list(bigru_glove_att["filename"][0].glob("*.h5"))) + \
+                 len(list(bilstm_fasttext_att["filename"][0].glob("*.h5")))
 
-    x_train, x_valid, y_train, y_valid = create_train_valid(answers["q1_sequences"], answers["q1_scores"], 0.1)
-    x = score(y_valid)
-    for i in range(3):
-        print(x.count(i))
+    if num_models == 18:
+        return
+
+    for i, p in enumerate(GRID):
+        if i < num_models - 1:
+            continue
+
+        filename = p["filename"] / f"{p['7_split'] * 10:.0f}.h5"
+        print(f"Model {i+1}/{len(GRID)}: {filename}")
+
+        answers, embeddings = load_arrays()
+
+        # Get the training and Validation Data
+        sequences = f"q{p['1_question']}_sequences"
+        scores = f"q{p['1_question']}_scores"
+        x_train, x_valid, y_train, y_valid = create_train_valid(answers[sequences], answers[scores], p["7_split"])
+
+        model = get_model(p["2_train"] == "train",  # whether to train or freeze the embeddings
+                          p["3_rnn"],  # whether to use an rnn layer or dense layer (for baseline models)
+                          p["4_bi"],  # whether the rnn layer should be bidirectional
+                          embeddings[f"q{p['1_question']}_{p['6_emb']}"],  # load correct embedding (glove/fasttext)
+                          p["5_att"],  # whether to use an attention mechanism with rnn layer
+                          p["1_question"])  # question number
+
+        # Simple early stopping
+        es = EarlyStopping(monitor='val_accuracy', mode='max', verbose=1, patience=5)
+
+        # Save the best model via checkpoints
+        mc = ModelCheckpoint(filename,
+                             monitor='val_accuracy',
+                             mode='max',
+                             verbose=1,
+                             save_best_only=True)
+
+        model.fit(x_train, y_train, epochs=30, batch_size=1,
+                  validation_data=(x_valid, y_valid),
+                  verbose=1,
+                  callbacks=[es, mc])
 
 
 if __name__ == '__main__':
-    filename1 = "saved_models/q1/best/"
-    filename2 = "saved_models/q2/best/"
+    train()
+    evaluate()
 
-    saved = num_models([{"filename": filename1}]) + num_models([{"filename": filename2}]) - 1
+    filename1 = bigru_glove_att["filename"][0]
+    filename2 = bilstm_fasttext_att["filename"][0]
 
-    """for i, m in enumerate(saved_models):
-        if i < saved:
-            continue
-
-        run(m)
-        notif(i + 1)"""
-
-    # get_results(filename1, "att", "gru")
-    # evaluate(filename1)
-    # get_results(filename2, "att", "lstm")
-    # evaluate(filename2)
-
-    # plot_results(filename1)
-    # plot_results(filename2)
+    plot_results()
     plot_results2(filename1, filename2)

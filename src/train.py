@@ -1,4 +1,4 @@
-from initialisation import CURR, KFOLDS, get_num_models, load_arrays, get_train_sequences
+from initialisation import GRID, KFOLDS, get_num_models, load_arrays, get_train_sequences
 from models.models import get_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
@@ -15,15 +15,15 @@ def train():
     num_models = get_num_models()  # number of models that have already been trained
 
     # We loop through each set of hyperparameters and train 5 models each via KFOLDS cross-validation
-    for p in CURR:
+    for p in GRID:
         for i in range(KFOLDS):
             if count < num_models:  # so that we re-train the last model that was saved
                 count += 1
                 continue
 
             # Filename is where the trained models are saved in saved_models
-            filename = p["filename"]
-            print(f"Model {count}/{len(CURR)*5}: {filename}/{i}.h5")
+            filename = p["filename"] / f"{i}.h5"
+            print(f"Model {count}/{len(GRID) * 5}: {filename}")
 
             answers, embeddings = load_arrays()
 
@@ -43,7 +43,7 @@ def train():
             es = EarlyStopping(monitor='val_accuracy', mode='max', verbose=1, patience=5)
 
             # Save the best model via checkpoints
-            mc = ModelCheckpoint(filename/f"{i}.h5",
+            mc = ModelCheckpoint(filename,
                                  monitor='val_accuracy',
                                  mode='max',
                                  verbose=1,
