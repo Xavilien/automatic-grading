@@ -26,7 +26,7 @@ Run `processing.py` to clean and process the training dataset as well as the wor
 - `scores.npy`: one-hot encoding of student scores 
 - `word_idx.pickle`: dictionary that returns the id of a given word 
 - `idx_word.pickle`: dictionary that returns the word given an id 
-- `embedding_matrix_glove/fasttext/lda.npy`: embedding matrix for a particular word embedding, used for input into the embedding layer of neural network (lda has been generated only for question 1)
+- `embedding_matrix_glove/fasttext.npy`: embedding matrix for a particular word embedding, used for input into the embedding layer of neural network (lda has been generated only for question 1)
 
 These arrays will be used subsequently in the training of the neural networks.
 
