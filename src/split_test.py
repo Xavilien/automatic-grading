@@ -4,17 +4,19 @@ from pathlib import Path
 
 import plotly.offline as py
 import plotly.graph_objs as go
+import plotly.io as pio
 
 from sklearn.model_selection import ParameterGrid
 from sklearn.utils import shuffle
 from sklearn.metrics import accuracy_score, f1_score
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.models import load_model
 
 from initialisation import load_arrays
-from models.models import get_model, Attention
+from models.models import Attention
 from evaluate import score
+from train import fit
 
+pio.kaleido.scope.mathjax = None  # prevent an error message when saving pdf
 
 FILEPATH = Path(__file__).parent.absolute()
 
@@ -30,7 +32,7 @@ bigru_glove_att = {
     "5_att": ["att"],
     "6_emb": ["glove"],
     "7_split": split,
-    "filename": [FILEPATH/"saved_models"/"q1"/"best"],
+    "filename": [FILEPATH / "saved_models" / "q1" / "best"],
 }
 
 bilstm_fasttext_att = {
@@ -41,7 +43,7 @@ bilstm_fasttext_att = {
     "5_att": ["att"],
     "6_emb": ["fasttext"],
     "7_split": split,
-    "filename": [FILEPATH/"saved_models"/"q2"/"best"],
+    "filename": [FILEPATH / "saved_models" / "q2" / "best"],
 }
 
 q1 = list(ParameterGrid(bigru_glove_att))
@@ -49,8 +51,12 @@ q2 = list(ParameterGrid(bilstm_fasttext_att))
 GRID = q1 + q2
 
 
-def create_train_valid(features, labels, train_fraction):
-    """Create training and validation features and labels."""
+def get_train_valid(train_fraction, features, labels):
+    """
+    Create training and validation sequences based on the fraction of the training data we want to train on. We keep
+    a constant validation set of 42 samples and use the remaining 200 samples for the training set so that it will
+    divide nicely with our train_fraction.
+    """
 
     # Randomly shuffle features and labels
     features, labels = shuffle(features, labels, random_state=50)
@@ -68,6 +74,9 @@ def create_train_valid(features, labels, train_fraction):
 
 
 def get_predictions(filename, qn):
+    """
+    Generate predictions for models trained in train().
+    """
     predictions = []
 
     for i in split:
@@ -78,7 +87,7 @@ def get_predictions(filename, qn):
         # Get the training and Validation Data
         sequences = f"q{qn}_sequences"
         scores = f"q{qn}_scores"
-        _, x_valid, _, y_valid = create_train_valid(answers[sequences], answers[scores], i)
+        _, x_valid, _, y_valid = get_train_valid(i, answers[sequences], answers[scores])
 
         # Load the trained model
         model = load_model(filename / f"{i * 10:.0f}.h5", custom_objects={"Attention": Attention})
@@ -94,15 +103,21 @@ def get_predictions(filename, qn):
 
 
 def evaluate():
+    """
+    Generate the accuracy and f1 results for the models trained in train().
+    """
     for qn, filename in enumerate(bigru_glove_att["filename"] + bilstm_fasttext_att["filename"]):
+        # Skip if we have calculated the results before
         if (filename / "results.npy").exists():
             continue
 
+        # Skip generating predictions if we have generated them before
         if (filename / "predictions.pickle").exists():
             predictions = pickle.load(open(filename / "predictions.pickle", "rb"))
         else:
-            predictions = get_predictions(filename, qn+1)
+            predictions = get_predictions(filename, qn + 1)
 
+        # Calculate the accuracy and f1 score for each model
         results = []
 
         for i in range(9):
@@ -117,16 +132,19 @@ def evaluate():
 
 
 def plot_results(mode="separate", save=False):
+    """
+    Plot the results generated in evaluate() into some nice graphs for visualisation.
+    """
     results = [
         np.load(str(bigru_glove_att["filename"][0] / "results.npy")),
         np.load(str(bilstm_fasttext_att["filename"][0] / "results.npy"))
     ]
 
-    p = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    x = [int(i * 10 * 25) for i in p]
+    x = [int(i * 10 * 25) for i in split]  # size of training set
 
-    acc = [go.Scatter(name=f"Accuracy (Dataset {i+1})", x=x, y=[x[0] for x in results[i]]) for i in range(2)]
-    f1 = [go.Scatter(name=f"F1 (Dataset {i+1})", x=x, y=[x[1] for x in results[i]]) for i in range(2)]
+    # Create the plots and set the layout
+    acc = [go.Scatter(name=f"Accuracy (Dataset {i + 1})", x=x, y=[x[0] for x in results[i]]) for i in range(2)]
+    f1 = [go.Scatter(name=f"F1 (Dataset {i + 1})", x=x, y=[x[1] for x in results[i]]) for i in range(2)]
     yaxes_range = [[0.6, 0.85], [0.0, 0.70]]
     layout = go.Layout(title=dict(xanchor="center", x=0.5),
                        xaxis=dict(title="Number of Training Responses", ticks="outside", mirror=True,
@@ -136,15 +154,15 @@ def plot_results(mode="separate", save=False):
 
     if mode == "separate":
         for i in range(2):
-            fig = go.Figure(data=[acc[i], f1[i]], layout=layout)
+            fig = go.Figure(data=[acc[i], f1[i]], layout=layout)  # create the graph
             fig.update_layout(title_text=f"Dataset {i + 1} Best Model Performance against Number of Training Responses")
             fig.update_yaxes(range=yaxes_range[i])
             py.iplot(fig)
             if save:
-                fig.write_image(f"Performance {i+1}.pdf", format="pdf")
+                fig.write_image(f"Performance {i + 1}.pdf", format="pdf")
 
     elif mode == "together":
-        fig = go.Figure(data=[acc[0], f1[0], acc[1], f1[1]], layout=layout)
+        fig = go.Figure(data=[acc[0], f1[0], acc[1], f1[1]], layout=layout)  # create the graph
         fig.update_layout(title_text="Performance of Best Models against Number of Training Responses")
         py.iplot(fig)
         if save:
@@ -156,51 +174,44 @@ def plot_results(mode="separate", save=False):
 
 
 def train():
+    """
+    In order to explore how the size of the training set affects our models' performance, we vary the size of the
+    training set from 25 samples to 250 samples in increments of 25 samples and train the best performing models for
+    each question. We evaulate the models on the validation set which has a size of 42 samples.
+
+    We count the number of models that have already been trained so that in the event that training is interrupted,
+    the code can continue training from the last model it had been training, skipping the models that have already been
+    trained.
+    """
     num_models = len(list(bigru_glove_att["filename"][0].glob("*.h5"))) + \
                  len(list(bilstm_fasttext_att["filename"][0].glob("*.h5")))
 
+    # We assume we have completed training if we have 18 trained models. If you would like to retrain the last model,
+    # please delete it (note that it will also retrain the second last model as well. Alternatively, you can just
+    # comment out this line
     if num_models == 18:
         return
 
     for i, p in enumerate(GRID):
+        # Skip training if the model has already been trained
         if i < num_models - 1:
             continue
 
         filename = p["filename"] / f"{p['7_split'] * 10:.0f}.h5"
-        print(f"Model {i+1}/{len(GRID)}: {filename}")
+        print(f"Model {i + 1}/{len(GRID)}: {filename}")
 
         answers, embeddings = load_arrays()
 
         # Get the training and Validation Data
         sequences = f"q{p['1_question']}_sequences"
         scores = f"q{p['1_question']}_scores"
-        x_train, x_valid, y_train, y_valid = create_train_valid(answers[sequences], answers[scores], p["7_split"])
+        x_train, x_valid, y_train, y_valid = get_train_valid(p["7_split"], answers[sequences], answers[scores])
 
-        model = get_model(p["2_train"] == "train",  # whether to train or freeze the embeddings
-                          p["3_rnn"],  # whether to use an rnn layer or dense layer (for baseline models)
-                          p["4_bi"],  # whether the rnn layer should be bidirectional
-                          embeddings[f"q{p['1_question']}_{p['6_emb']}"],  # load correct embedding (glove/fasttext)
-                          p["5_att"],  # whether to use an attention mechanism with rnn layer
-                          p["1_question"])  # question number
-
-        # Simple early stopping
-        es = EarlyStopping(monitor='val_accuracy', mode='max', verbose=1, patience=5)
-
-        # Save the best model via checkpoints
-        mc = ModelCheckpoint(filename,
-                             monitor='val_accuracy',
-                             mode='max',
-                             verbose=1,
-                             save_best_only=True)
-
-        model.fit(x_train, y_train, epochs=30, batch_size=1,
-                  validation_data=(x_valid, y_valid),
-                  verbose=1,
-                  callbacks=[es, mc])
+        fit(embeddings, filename, p, x_train, x_valid, y_train, y_valid)
 
 
 if __name__ == '__main__':
     train()
     evaluate()
     plot_results("separate")
-    plot_results("together")
+    plot_results("together", save=True)
