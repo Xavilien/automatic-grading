@@ -177,7 +177,7 @@ def train():
     """
     In order to explore how the size of the training set affects our models' performance, we vary the size of the
     training set from 25 samples to 250 samples in increments of 25 samples and train the best performing models for
-    each question. We evaulate the models on the validation set which has a size of 42 samples.
+    each question. We evaluate the models on the validation set which has a size of 42 samples.
 
     We count the number of models that have already been trained so that in the event that training is interrupted,
     the code can continue training from the last model it had been training, skipping the models that have already been
