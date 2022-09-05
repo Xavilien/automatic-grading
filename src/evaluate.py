@@ -117,4 +117,6 @@ def evaluate(output="mean"):
 
 
 if __name__ == '__main__':
-    evaluate()
+    evaluate("mean")
+    evaluate("best")
+    evaluate("all")
