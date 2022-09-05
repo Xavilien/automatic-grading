@@ -20,8 +20,6 @@ pio.kaleido.scope.mathjax = None  # prevent an error message when saving pdf
 
 FILEPATH = Path(__file__).parent.absolute()
 
-# TODO: Clean up split_test.py
-
 split = [i / 10 for i in range(1, 10)]
 
 bigru_glove_att = {
