@@ -22,7 +22,7 @@ To run `processing.py`, you will also have to download some data from [NLTK](htt
 Run `processing.py` to clean and process the training dataset as well as the word embeddings. However, there is no real need to re-run this as the following arrays have already been generated in `src/arrays`:
 
 - `answers.npy`: student answers that have been pre-processed to remove punctuation, non-alphabetical tokens and stop words
-- `sequences`: `answers` but each word is represented by an integer based on `word_idx` 
+- `sequences.npy`: student answers but each word is represented by an integer based on `word_idx` 
 - `scores.npy`: one-hot encoding of student scores 
 - `word_idx.pickle`: dictionary that returns the id of a given word 
 - `idx_word.pickle`: dictionary that returns the word given an id 
@@ -33,20 +33,20 @@ These arrays will be used subsequently in the training of the neural networks.
 **Note**: refer to [here](#setup) for the additional data you will have to download if you would like to re-run `processing.py`. 
 
 ### Initialising Hyperparameters
-`initialisation.py` is where we generate 36 sets of hyperparameters for all the models we want to train. The functions are called in `train.py` and `evaluate.py` and so there is no real need to run this, but you may want to examine the hyperparameters we search through.
+`initialisation.py` is where we generate 36 sets of hyperparameters for all the models we want to train as well as define some helper functions. The functions are called in `train.py` and `evaluate.py` so there is no real need to run this, but you may want to examine the hyperparameters we search through.
 
 ### Generating Models
-`models.py` contains the `get_model` function which generates a models given a set of hyperparameters. During training in `train.py`, we loop through all 36 sets of hyperparameters generated in `initialisation.py` and generate a model for each of them.
+`models.py` contains the `get_model` function which generates a models given a set of hyperparameters. During training in `train.py` and `split_test.py`, call this function to generate the model we want.
 
 ### Training Models
 Running `train.py` will train 5 models for each of the 36 sets of hyperparameters generated in `initialisation.py`, resulting in a total of 180 models. We use 5-fold cross-validation and so each of the 5 models is trained on a different subset of 80% of the training data while the other 20% is used for validation.
 
-The function also counts the number of models that have already been trained so that in the event that training is interrupted, running the function again will resume training from the last model that it had been training in order to save time.
+The function also counts the number of models that have already been trained so that in the event that training is interrupted, running the function again will skip the models that have already been trained in order to save time.
 
 ### Evaluating All Models
-Running `evaluate.py`: generates the results from the trained models as a csv file saved in `src/results`. We use 5-fold cross-validation and the metrics we use are accuracy, loss and F1 score. The default option is to take the mean of the 5 models, but passing "best" or "all" into `evaluate()` will save the best result or all of the results respectively. 
+Running `evaluate.py`: generates the results from the trained models as a csv file saved in `src/results`. We use 5-fold cross-validation and the metrics we use are accuracy, loss and weighted F1 score.
 
-The results that we generated for our research paper can already be found in `src/results`. The following tables showcase half of those results (for when the embeddings of the models were not trained:
+The results that we generated for our research paper can already be found in `src/results`. The following tables showcase half of those results (for when the embeddings of the models were not trained):
 
 <div style="text-align: center;">
     <img alt="Performance of Quantitative Models on Dataset 1" src="images/results1.png" width="48%"/>
@@ -54,7 +54,11 @@ The results that we generated for our research paper can already be found in `sr
 </div>
 
 ### Evaluating Model Performance Against Different Splits of Training and Test Set
-**split_test.py**: compare the performance of the best models against number of training samples 
+In order to explore how the size of the training set affects our models' performance, we vary the size of the training set from 25 samples to 250 samples in increments of 25 samples and train the best performing models for each question. We then evaluate the models on the validation set which has a size of 42 samples. The best performing model for question 1 was BiGRU with GloVe and Attention while that for question 2 was BiLSTM with fastText and Attention.
+
+Running `split_test.py` will train and evaluate all the models, as well as visualise the results in plotly graphs. To save the graphs, pass `save=True` to `plot_results()`. This is one of the graphs that we got:
+
+![Performance of Best Models against Number of Training Responses](images/results3.png)
 
 ### Visualising the Attention Weights
 Run `attention.py` to plot attention weights for a particular model given a sample answer (default is answer 113).
@@ -69,6 +73,3 @@ Firstly, it would have been good to create a cross-validation set so that we hav
 Secondly, our training algorithm used early stopping and model checkpoints in order to save the model that performed best on the validation set. However, we understand that this is not the best practice as it similarly relies on the test set to pick the best model. Thus, our results become biased because we are essentially optimising on the test set. Instead, other methods of addressing over-fitting can be employed, including an increase in regularisation and creating more training data.
 
 Thirdly, to address the choice of models, we understand that the current state-of-the-art models are mostly transformers instead of LSTMs. It would be interesting to train a transformer (or fine-tune an existing one) on this dataset to compare the performance.
-
-### Some other minor code improvements:
-- 
